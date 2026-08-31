@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { test } from "node:test";
 
+import { isChannelAllowed, parseChannelList } from "../channels";
 import { parseNameStatic, parseRanks, parseReport, parseTargetUserId } from "../parser";
 import { validateRanks } from "../ranks";
 import { DEFAULT_TEMPLATE, messageLink, renderAudit } from "../template";
@@ -112,4 +113,18 @@ test("сообщение без отчёта отклоняется с поня�
     const result = parseReport({ content: "привет", embeds: [] });
     assert.equal(result.ok, false);
     assert.match(result.ok ? "" : result.error, /нет embed/);
+});
+
+test("фильтр каналов: пустая настройка пропускает всё", () => {
+    assert.equal(isChannelAllowed("1538690946156462094", ""), true);
+    assert.equal(isChannelAllowed("123", "   "), true);
+});
+
+test("фильтр каналов: разделители и мусор в списке", () => {
+    assert.deepEqual(parseChannelList("1538690946156462094"), ["1538690946156462094"]);
+    assert.deepEqual(parseChannelList("111, 222\n333  444"), ["111", "222", "333", "444"]);
+    assert.deepEqual(parseChannelList(" , ; "), []);
+
+    assert.equal(isChannelAllowed("222", "111, 222"), true);
+    assert.equal(isChannelAllowed("999", "111, 222"), false);
 });
