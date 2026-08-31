@@ -1,3 +1,9 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 JellyColonel
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 export interface AuditData {
     promoterId: string;
     promoterName: string;

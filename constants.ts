@@ -1,3 +1,9 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 JellyColonel
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /** Канал, в котором бот «Ева Повышаловна» публикует отчёты. */
 export const DEFAULT_REPORT_CHANNEL_ID = "1538690946156462094";
 

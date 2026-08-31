@@ -33,16 +33,32 @@ git clone https://github.com/Vendicated/Vencord
 cd Vencord && pnpm i
 
 git clone https://github.com/JellyColonel/EmployeeAudit src/userplugins/EmployeeAudit
-# либо симлинк на уже склонированный репозиторий:
-# ln -s ~/projects/VencordPlugins/EmployeeAudit src/userplugins/EmployeeAudit
 
 pnpm build && pnpm inject
 ```
+
+Симлинком плагин подключить нельзя: esbuild резолвит реальный путь, файлы
+оказываются вне дерева Vencord и алиасы `@utils/*` не разрешаются. Нужен клон
+или копия внутри `src/userplugins/`.
 
 Затем включить плагин в настройках Vencord и заполнить в них своё имя, статик и
 Discord ID (ID можно оставить пустым — подставится текущий аккаунт).
 
 Для разработки: `pnpm watch`, перезагрузка Discord по Ctrl+R.
+
+## Разработка в WSL при Discord на Windows
+
+Если Vencord уже установлен на Windows официальным установщиком, Node на Windows
+не нужен: установщик подменил `app.asar` заглушкой, которая грузит
+`%APPDATA%\Vencord\dist`, а эта папка доступна из WSL на запись. Достаточно
+собрать в WSL и подложить туда результат:
+
+```bash
+scripts/deploy-to-windows.sh
+```
+
+Скрипт собирает Vencord, делает резервную копию `dist` и копирует свежие файлы.
+Дальше Discord надо полностью закрыть (трей → Quit) и запустить заново.
 
 ## Настройки
 

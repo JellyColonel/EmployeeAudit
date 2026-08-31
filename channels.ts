@@ -1,3 +1,9 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 JellyColonel
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /**
  * Разбор списка каналов из настроек: ID через запятую, пробел или перенос строки.
  * Всё, что не похоже на Discord ID, отбрасывается.
