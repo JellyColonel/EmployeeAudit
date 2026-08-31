@@ -116,6 +116,25 @@ pnpm watch                  # разработка, перезагрузка Dis
 - Пара `01-ordinator-to-senior.json` → первый аудит в `audits.txt` — сквозной тест
   (совпадают и Discord ID, и имя, и статик, и ранги).
 
+## Рабочий процесс
+
+Изменения идут **через pull request'ы**: ветка от `main` → коммит → `gh pr create`.
+Напрямую в `main` не пушим.
+
+## Проверенные API Vencord
+
+Сверено с веткой `main` репозитория Vendicated/Vencord (сентябрь 2026):
+
+- `copyWithToast(text, toastMessage?)` — в **`@utils/discord`**, не в `@utils/misc`.
+- `insertTextIntoChatInputBox(text)` — там же.
+- Контекстное меню — свойство `contextMenus: { "message": patch }` в `definePlugin`,
+  а не ручные `addContextMenuPatch`/`removeContextMenuPatch` в `start`/`stop`.
+- `NavContextMenuPatchCallback`, `findGroupChildrenByChildId` — `@api/ContextMenu`.
+  Якорь для вставки пункта в меню сообщения — id `copy-text`.
+- `Menu`, `Toasts`, `UserStore`, `ChannelStore` — `@webpack/common`.
+- Тип `Message` — `@vencord/discord-types`.
+- `OptionType.STRING` поддерживает `multiline: true` (textarea для шаблона).
+
 ## Тесты
 
 Чистая логика (`parser.ts`, `ranks.ts`, `template.ts`) не зависит от Vencord и
