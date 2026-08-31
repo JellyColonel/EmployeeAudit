@@ -1,3 +1,9 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 JellyColonel
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 /** Ранги отдела «Скорая Медицинская Помощь» (средний состав, 4–11). */
 export const SMP_RANKS: Record<number, string> = {
     4: "Фельдшер",

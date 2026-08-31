@@ -1,9 +1,15 @@
+/*
+ * Vencord, a Discord client mod
+ * Copyright (c) 2026 JellyColonel
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
+
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
 import { CopyIcon } from "@components/Icons";
 import { copyWithToast, insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
-import { ChannelStore, Menu, Toasts, UserStore } from "@webpack/common";
+import { ChannelStore, Menu, showToast, Toasts, UserStore } from "@webpack/common";
 
 import { isChannelAllowed } from "./channels";
 import { isPromotionReport, MessageLike, parseReport } from "./parser";
@@ -13,10 +19,6 @@ import { AuditData, messageLink, renderAudit } from "./template";
 type BuildResult =
     | { ok: true; text: string; warnings: string[]; }
     | { ok: false; error: string; };
-
-function toast(message: string, type: number) {
-    Toasts.show({ message, id: Toasts.genId(), type });
-}
 
 function buildAudit(message: Message): BuildResult {
     const result = parseReport(message as unknown as MessageLike);
@@ -48,7 +50,7 @@ function buildAudit(message: Message): BuildResult {
 async function handleClick(message: Message) {
     const built = buildAudit(message);
     if (!built.ok) {
-        toast(built.error, Toasts.Type.FAILURE);
+        showToast(built.error, Toasts.Type.FAILURE);
         return;
     }
 
@@ -59,10 +61,10 @@ async function handleClick(message: Message) {
     if (shouldInsert) insertTextIntoChatInputBox(built.text);
 
     if (shouldCopy) await copyWithToast(built.text, "Кадровый аудит скопирован");
-    else if (shouldInsert) toast("Кадровый аудит вставлен в поле ввода", Toasts.Type.SUCCESS);
+    else if (shouldInsert) showToast("Кадровый аудит вставлен в поле ввода", Toasts.Type.SUCCESS);
 
     // Предупреждения не мешают работе: аудит уже собран, но отчёт выглядит странно.
-    for (const warning of built.warnings) toast(`⚠️ ${warning}`, Toasts.Type.MESSAGE);
+    for (const warning of built.warnings) showToast(`⚠️ ${warning}`, Toasts.Type.MESSAGE);
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {

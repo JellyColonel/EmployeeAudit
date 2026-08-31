@@ -23,7 +23,7 @@
 кадрового аудита → положить его в буфер обмена по клику пункта в контекстном меню
 сообщения.
 
-## Технические решения (предварительно)
+## Технические решения
 
 - Патчи Webpack, скорее всего, **не нужны**: хватит `@api/ContextMenu`
   (`addContextMenuPatch("message", ...)`) + данные сообщения из аргументов меню /
@@ -34,15 +34,60 @@
 - Расположение: `src/userplugins/EmployeeAudit/` внутри собранного из исходников
   Vencord (готовая сборка userplugins не поддерживает).
 
+## Окружение: WSL + Windows
+
+Разработка идёт в WSL, а Discord с Vencord стоит на Windows. Проверено 01.09.2026:
+
+| Что | Состояние |
+|---|---|
+| WSL-интероп (`.exe` из WSL) | работает |
+| Node / pnpm **на Windows** | **не установлены** (есть только git и winget) |
+| Node 24 + corepack **в WSL** | есть |
+| Discord | `C:\Users\Valeriu\AppData\Local\Discord\app-1.0.9255`, stable |
+| Vencord | уже установлен официальным установщиком |
+| Запись в `%APPDATA%\Vencord` из WSL | доступна |
+
+Ключевой факт: установщик Vencord подменил `app.asar` крошечной заглушкой
+
+```js
+require("C:\Users\Valeriu\AppData\Roaming\Vencord\dist\patcher.js")
+```
+
+то есть Discord грузит **строго эту папку**, а она пишется из WSL. Отсюда следует,
+что **Node на Windows не нужен и `pnpm inject` запускать не надо** — инжект уже
+сделан установщиком, достаточно подменить содержимое `dist`.
+
 ## Сборка и разработка
 
+Vencord склонирован в `~/projects/Vencord`, плагин — в его `src/userplugins/`.
+pnpm вызывается через corepack (`corepack pnpm …`), глобально он не установлен.
+
 ```bash
-git clone https://github.com/Vendicated/Vencord
-cd Vencord && pnpm i
-# плагин кладётся в src/userplugins/EmployeeAudit/
-pnpm build && pnpm inject   # первичная установка
-pnpm watch                  # разработка, перезагрузка Discord по Ctrl+R
+git clone https://github.com/Vendicated/Vencord ~/projects/Vencord
+cd ~/projects/Vencord && corepack pnpm i
+git clone https://github.com/JellyColonel/EmployeeAudit src/userplugins/EmployeeAudit
+
+corepack pnpm build      # сборка
+corepack pnpm testTsc    # проверка типов — ловит то, что сборка пропускает
+corepack pnpm lint       # eslint Vencord, требует SPDX-заголовки в каждом файле
 ```
+
+**Симлинк вместо клона не работает.** esbuild резолвит реальный путь файла, тот
+оказывается вне дерева Vencord, и алиасы `@utils/*`, `@api/*`, `@webpack/common`
+перестают разрешаться — сборка падает с `Could not resolve`. Нужен именно клон
+или копия внутри `src/userplugins/`.
+
+Доставка на Windows — `scripts/deploy-to-windows.sh`: собирает, делает резервную
+копию `%APPDATA%\Vencord\dist` и подкладывает туда свежие
+`patcher.js`, `preload.js`, `renderer.js`, `renderer.css` с картами.
+`vencordDesktop*` не копируются — это файлы Vesktop. `package.json` в целевой
+папке не трогается, его кладёт установщик.
+
+После копирования Discord нужно **полностью закрыть** (трей → Quit) и запустить
+заново; Ctrl+R не подхватит новый `patcher.js`.
+
+Риск: официальный апдейтер Vencord может перезаписать `dist` своей сборкой —
+тогда плагин просто исчезнет из списка, лечится повторным запуском скрипта.
 
 ## Спецификация
 
@@ -164,8 +209,17 @@ esbuild'ом и пишет их как `./parser`, а Node так не умее�
 | `template.ts` | шаблон аудита и подстановка |
 | `samples/` | реальные отчёты и эталонные аудиты |
 | `test/` | тесты на Node's test runner |
+| `scripts/deploy-to-windows.sh` | сборка и доставка в Windows-установку Vencord |
+| `LICENSE` | GPL-3.0-or-later, как у Vencord |
 
 ## Решения
+
+- **Плагин живёт в отдельном репозитории, а не в форке Vencord.** В форке он
+  попал бы под `.gitignore` (`src/userplugins` там игнорируется), либо пришлось
+  бы класть его в `src/plugins` и ребейзить поверх ~44 чужих коммитов в месяц.
+  Типизация от форка не выигрывает: клон внутри `src/userplugins` и так попадает
+  под `include: ["src/**/*"]` и `paths` из tsconfig Vencord. В upstream плагин
+  не пойдёт — он завязан на конкретный сервер и бота.
 
 - Проверяющий по умолчанию: `<@178560714821206016>`, «Бронислав Небесный», статик `597`.
   Подтверждено пользователем; вынесено в настройки, а не зашито.
