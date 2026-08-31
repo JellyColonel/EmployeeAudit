@@ -5,6 +5,7 @@ import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
 import { ChannelStore, Menu, Toasts, UserStore } from "@webpack/common";
 
+import { isChannelAllowed } from "./channels";
 import { isPromotionReport, MessageLike, parseReport } from "./parser";
 import { settings } from "./settings";
 import { AuditData, messageLink, renderAudit } from "./template";
@@ -65,7 +66,9 @@ async function handleClick(message: Message) {
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
-    if (!message || !isPromotionReport(message as unknown as MessageLike)) return;
+    if (!message) return;
+    if (!isChannelAllowed(message.channel_id, settings.store.channelIds)) return;
+    if (!isPromotionReport(message as unknown as MessageLike)) return;
 
     const item = (
         <Menu.MenuItem

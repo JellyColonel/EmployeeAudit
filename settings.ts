@@ -1,6 +1,7 @@
 import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 
+import { DEFAULT_REPORT_CHANNEL_ID } from "./constants";
 import { DEFAULT_TEMPLATE } from "./template";
 
 export const settings = definePluginSettings({
@@ -21,6 +22,12 @@ export const settings = definePluginSettings({
         description: "Ваш Discord ID. Пусто — берётся текущий аккаунт",
         default: "",
         placeholder: "автоматически"
+    },
+    channelIds: {
+        type: OptionType.STRING,
+        description: "ID каналов, где показывать пункт меню (через запятую). Пусто — во всех каналах",
+        default: DEFAULT_REPORT_CHANNEL_ID,
+        placeholder: "во всех каналах"
     },
     action: {
         type: OptionType.SELECT,
