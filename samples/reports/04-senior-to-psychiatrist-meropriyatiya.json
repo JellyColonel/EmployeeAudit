@@ -1,0 +1,22 @@
+{
+  "content": "<@&1541779227018526741> | <@258188394239098881>",
+  "author": { "id": "1542575130168004712", "username": "Ева Повышаловна", "bot": true },
+  "embeds": [
+    {
+      "rawTitle": "Отчет на повышение",
+      "type": "rich",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSfRf-eoWUgsTfIceBjeY1KC7yB2BOiQot2rgiHrSIEeAR1fnQ/viewform",
+      "footer": { "text": "by Brian(ds: jellycolonel) and Аким (ds: klearsoff)" },
+      "timestamp": "2026-08-31T21:03:14.844Z",
+      "fields": [
+        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Андрей Титов | 2374", "inline": false },
+        { "rawName": "Дата последнего повышения", "rawValue": "31.08.2026", "inline": false },
+        { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Старший ординатор [6] → Психиатр [7]", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "134 | https://disk.yandex.ru/d/0yHc4tS4PHlSPg", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "20 | https://disk.yandex.ru/d/GnNLXjJZtuFzOw", "inline": false },
+        { "rawName": "Мероприятия", "rawValue": "Сегодня был на крафтах https://disk.yandex.ru/d/Tpybb6WVelS9sg - 25 баллов", "inline": false },
+        { "rawName": "Общее количество баллов (Нужно 400)", "rawValue": "**410**, без учёта мероприятий", "inline": false }
+      ]
+    }
+  ]
+}

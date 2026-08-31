@@ -1,0 +1,23 @@
+{
+  "content": "<@&1541779227018526741> | <@330020218627948545>",
+  "author": { "id": "1542575130168004712", "username": "Ева Повышаловна", "bot": true },
+  "embeds": [
+    {
+      "rawTitle": "Отчет на повышение",
+      "type": "rich",
+      "url": "https://docs.google.com/forms/d/e/1FAIpQLSfRf-eoWUgsTfIceBjeY1KC7yB2BOiQot2rgiHrSIEeAR1fnQ/viewform",
+      "footer": { "text": "by Brian(ds: jellycolonel) and Аким (ds: klearsoff)" },
+      "timestamp": "2026-08-31T22:09:01.575Z",
+      "fields": [
+        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Эмилия Небесная | 9200", "inline": false },
+        { "rawName": "Дата последнего повышения", "rawValue": "31.08.2026", "inline": false },
+        { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Хирург [9] → Зам. зав. отделением [10]", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "21 | https://drive.google.com/drive/folders/14Sg0OcyZbEm2qIc4v_tP98cBpYiXXI1B?usp=drive_link", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "42 | https://drive.google.com/drive/folders/14Sg0OcyZbEm2qIc4v_tP98cBpYiXXI1B?usp=drive_link", "inline": false },
+        { "rawName": "Заполнение кадрового аудита", "rawValue": "4 | https://drive.google.com/drive/folders/1mv0uFncyEVrlAr9-x054B9X6e-BAqtxp?usp=drive_link", "inline": false },
+        { "rawName": "Проверка отчета на повышение", "rawValue": "6 | https://drive.google.com/drive/folders/1xgMHD1iW2K46XnpQVp2VkotoHCEliCS9?usp=drive_link", "inline": false },
+        { "rawName": "Общее количество баллов", "rawValue": "**539**", "inline": false }
+      ]
+    }
+  ]
+}
