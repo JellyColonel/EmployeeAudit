@@ -17,10 +17,18 @@ TARGET="${TARGET:-/mnt/c/Users/$WIN_USER/AppData/Roaming/Vencord/dist}"
 [ -d "$VENCORD_REPO" ] || { echo "Нет репозитория Vencord: $VENCORD_REPO" >&2; exit 1; }
 [ -d "$TARGET" ] || { echo "Нет папки Vencord на Windows: $TARGET" >&2; exit 1; }
 
+# --standalone: без него esbuild подставляет process.platform константой сборки.
+# Мы собираем в WSL, значит в сборку попадёт "linux", виндовые ветки Vencord
+# свернутся в false и будут выброшены — winCtrlQ, winNativeTitleBar и
+# windowsMaterial перестают работать. С флагом платформа остаётся рантайм-
+# проверкой, и сборка корректна на Windows.
+#
 # --disable-updater: апдейтер Vencord в подменённом dist всё равно нерабочий —
 # git-апдейтер ищет репозиторий в %APPDATA%\Vencord, где его нет. Без флага
 # вкладка Updater висит с ошибкой; с флагом она просто не создаётся.
-BUILD_FLAGS="${BUILD_FLAGS:---disable-updater}"
+# Он же снимает единственный минус --standalone: standalone-сборка выбрала бы
+# http-апдейтер, который мог бы перезаписать нашу сборку.
+BUILD_FLAGS="${BUILD_FLAGS:---standalone --disable-updater}"
 
 echo "==> Сборка в $VENCORD_REPO ($BUILD_FLAGS)"
 cd "$VENCORD_REPO"
