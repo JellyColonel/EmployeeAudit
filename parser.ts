@@ -124,19 +124,19 @@ export function parseTargetUserId(content: string): string | null {
 
 export function parseReport(message: MessageLike): ParseResult {
     const embed = findReportEmbed(message);
-    if (!embed) return { ok: false, error: "В сообщении нет embed'а отчёта на повышение" };
+    if (!embed) return { ok: false, error: "This message has no promotion report embed" };
 
     const nameField = findField(embed, FIELD_NAME_STATIC);
-    if (!nameField) return { ok: false, error: "В отчёте нет поля «Имя Фамилия | Static ID»" };
+    if (!nameField) return { ok: false, error: "Report is missing the «Имя Фамилия | Static ID» field" };
 
     const nameStatic = parseNameStatic(fieldValue(nameField));
-    if (!nameStatic) return { ok: false, error: `Не разобрать имя и статик: «${fieldValue(nameField)}»` };
+    if (!nameStatic) return { ok: false, error: `Could not parse name and static: «${fieldValue(nameField)}»` };
 
     const rankField = findField(embed, FIELD_RANKS);
-    if (!rankField) return { ok: false, error: "В отчёте нет поля с рангами" };
+    if (!rankField) return { ok: false, error: "Report is missing the rank field" };
 
     const ranks = parseRanks(fieldValue(rankField));
-    if (!ranks) return { ok: false, error: `Не разобрать ранги: «${fieldValue(rankField)}»` };
+    if (!ranks) return { ok: false, error: `Could not parse ranks: «${fieldValue(rankField)}»` };
 
     return {
         ok: true,

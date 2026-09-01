@@ -106,10 +106,10 @@ test("проверка по таблице СМП ловит опечатку и
 
     const typo = validateRanks(5, 6, "Ординатор", "Терапевт");
     assert.equal(typo.length, 1);
-    assert.match(typo[0], /Старший ординатор/);
+    assert.match(typo[0], /Старший ординатор/); // название ранга остаётся русским
 
     const jump = validateRanks(5, 7, "Ординатор", "Психиатр");
-    assert.deepEqual(jump, ["Повышение не на один ранг: 5 → 7"]);
+    assert.deepEqual(jump, ["Promotion is not by a single rank: 5 → 7"]);
 
     const outOfRange = validateRanks(2, 3, "Стажёр", "Санитар");
     assert.equal(outOfRange.length, 2);
@@ -118,7 +118,7 @@ test("проверка по таблице СМП ловит опечатку и
 test("сообщение без отчёта отклоняется с понятной ошибкой", () => {
     const result = parseReport({ content: "привет", embeds: [] });
     assert.equal(result.ok, false);
-    assert.match(result.ok ? "" : result.error, /нет embed/);
+    assert.match(result.ok ? "" : result.error, /no promotion report embed/);
 });
 
 test("фильтр каналов: пустая настройка пропускает всё", () => {

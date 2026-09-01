@@ -33,14 +33,14 @@ export function validateRanks(
     for (const [rank, name] of checks) {
         const expected = SMP_RANKS[rank];
         if (!expected) {
-            warnings.push(`Ранг ${rank} («${name}») вне таблицы СМП (4–11)`);
+            warnings.push(`Rank ${rank} («${name}») is outside the EMS table (4–11)`);
         } else if (normalizeRankName(expected) !== normalizeRankName(name)) {
-            warnings.push(`Ранг ${rank} в отчёте назван «${name}», в таблице СМП — «${expected}»`);
+            warnings.push(`Rank ${rank} is «${name}» in the report, but «${expected}» in the EMS table`);
         }
     }
 
     if (newRank !== oldRank + 1) {
-        warnings.push(`Повышение не на один ранг: ${oldRank} → ${newRank}`);
+        warnings.push(`Promotion is not by a single rank: ${oldRank} → ${newRank}`);
     }
 
     return warnings;
