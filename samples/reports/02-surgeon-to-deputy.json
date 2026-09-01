@@ -12,10 +12,10 @@
         { "rawName": "Имя Фамилия | Static ID", "rawValue": "Ольга Ветрова | 10002", "inline": false },
         { "rawName": "Дата последнего повышения", "rawValue": "31.08.2026", "inline": false },
         { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Хирург [9] → Зам. зав. отделением [10]", "inline": false },
-        { "rawName": "Оказание ПМП днём", "rawValue": "21 | https://example.com/evidence/00", "inline": false },
-        { "rawName": "Оказание ПМП ночью", "rawValue": "42 | https://example.com/evidence/00", "inline": false },
-        { "rawName": "Заполнение кадрового аудита", "rawValue": "4 | https://example.com/evidence/00", "inline": false },
-        { "rawName": "Проверка отчета на повышение", "rawValue": "6 | https://example.com/evidence/00", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "21 | https://example.com/evidence/11", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "42 | https://example.com/evidence/11", "inline": false },
+        { "rawName": "Заполнение кадрового аудита", "rawValue": "4 | https://example.com/evidence/12", "inline": false },
+        { "rawName": "Проверка отчета на повышение", "rawValue": "6 | https://example.com/evidence/13", "inline": false },
         { "rawName": "Общее количество баллов", "rawValue": "**539**", "inline": false }
       ]
     }

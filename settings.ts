@@ -48,14 +48,14 @@ export const settings = definePluginSettings({
     promoterName: {
         type: OptionType.STRING,
         get description() { return t("promoterName", currentLang()); },
-        default: "Виктор Громов",
+        default: "",
         placeholder: "Имя Фамилия"
     },
     promoterStatic: {
         type: OptionType.STRING,
         get description() { return t("promoterStatic", currentLang()); },
-        default: "500",
-        placeholder: "500"
+        default: "",
+        placeholder: "12345"
     },
     promoterId: {
         type: OptionType.STRING,

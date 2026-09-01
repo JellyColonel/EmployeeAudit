@@ -31,6 +31,10 @@ function buildAudit(message: Message): BuildResult {
     }
 
     const { promoterId, promoterName, promoterStatic, template } = settings.store;
+    if (!promoterName.trim() || !promoterStatic.trim()) {
+        return { ok: false, issue: { code: "promoter-not-configured" } };
+    }
+
     const guildId = ChannelStore.getChannel(message.channel_id)?.guild_id;
 
     const data: AuditData = {
