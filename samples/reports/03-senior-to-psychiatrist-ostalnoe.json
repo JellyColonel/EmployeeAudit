@@ -12,9 +12,9 @@
         { "rawName": "Имя Фамилия | Static ID", "rawValue": "Пётр Соколов | 10003", "inline": false },
         { "rawName": "Дата последнего повышения", "rawValue": "31.08.2026", "inline": false },
         { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Старший ординатор [6] → Психиатр [7]", "inline": false },
-        { "rawName": "Оказание ПМП днём", "rawValue": "62 | https://example.com/evidence/00", "inline": false },
-        { "rawName": "Оказание ПМП ночью", "rawValue": "80 | https://example.com/evidence/00", "inline": false },
-        { "rawName": "Остальное", "rawValue": "Поставка +25Б\nhttps://example.com/evidence/00", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "62 | https://example.com/evidence/03", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "80 | https://example.com/evidence/09", "inline": false },
+        { "rawName": "Остальное", "rawValue": "Поставка +25Б\nhttps://example.com/evidence/05", "inline": false },
         { "rawName": "Общее количество баллов (Нужно 400)", "rawValue": "**434**", "inline": false }
       ]
     }

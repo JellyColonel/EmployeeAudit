@@ -17,6 +17,7 @@ export type AuditIssue =
     | { code: "missing-rank-field"; }
     | { code: "unparsable-ranks"; value: string; }
     | { code: "no-user-mention"; }
+    | { code: "promoter-not-configured"; }
     | { code: "rank-out-of-table"; rank: number; name: string; }
     | { code: "rank-name-mismatch"; rank: number; name: string; expected: string; }
     | { code: "rank-jump"; from: number; to: number; };
@@ -87,6 +88,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return `Could not parse ranks: «${issue.value}»`;
             case "no-user-mention":
                 return "No user mention in the report — cannot tell who was promoted";
+            case "promoter-not-configured":
+                return "Fill in your name and Static ID in the plugin settings first";
             case "rank-out-of-table":
                 return `Rank ${issue.rank} («${issue.name}») is outside the mid-level range (4–11)`;
             case "rank-name-mismatch":
@@ -109,6 +112,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return `Не удалось разобрать ранги: «${issue.value}»`;
             case "no-user-mention":
                 return "В отчёте нет упоминания повышаемого — некого подставить в «Повышен(а)»";
+            case "promoter-not-configured":
+                return "Сначала заполните своё имя и Static ID в настройках плагина";
             case "rank-out-of-table":
                 return `Ранг ${issue.rank} («${issue.name}») вне диапазона среднего состава (4–11)`;
             case "rank-name-mismatch":

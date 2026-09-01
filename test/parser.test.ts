@@ -28,7 +28,7 @@ function expectedAudit(index: number): string {
 }
 
 const PROMOTER = {
-    promoterId: "178560714821206016",
+    promoterId: "100000000000000000",
     promoterName: "Виктор Громов",
     promoterStatic: "500"
 };
