@@ -6,7 +6,7 @@ set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 VENCORD_REPO="${VENCORD_REPO:-$HOME/projects/Vencord}"
-BUILD_FLAGS="${BUILD_FLAGS:---disable-updater}"
+BUILD_FLAGS="${BUILD_FLAGS:---standalone --disable-updater}"
 TAG="${1:-v$(date +%Y.%m.%d)}"
 
 DIST_FILES=(
