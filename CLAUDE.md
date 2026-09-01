@@ -226,11 +226,17 @@ cd ~/projects/VencordPlugins/EmployeeAudit && ./scripts/deploy-to-windows.sh
 гоняется прямо здесь:
 
 ```bash
-node --import ./test/hooks.mjs --test test/parser.test.ts
+node --import ./test/hooks.mjs --test test/*.test.ts
 ```
 
-`test/hooks.mjs` дорезолвивает импорты без расширений — Vencord собирается
-esbuild'ом и пишет их как `./parser`, а Node так не умеет.
+`test/hooks.mjs` дорезолвивает импорты без расширений (Vencord собирается
+esbuild'ом и пишет их как `./parser`, а Node так не умеет) и подменяет модули
+Vencord заглушками из `test/stubs/vencord.mjs`.
+
+`test/settings.test.ts` — дымовой тест: он импортирует `settings.ts` вне Discord
+и потому ловит падения на этапе загрузки модуля. Такое падение уносит **весь
+renderer Vencord**, а не только плагин, и ни `testTsc`, ни `lint`, ни сборка его
+не видят.
 
 ## Структура
 
@@ -249,7 +255,7 @@ esbuild'ом и пишет их как `./parser`, а Node так не умее�
 | `ranks.ts` | таблица рангов СМП и проверка |
 | `template.ts` | шаблон аудита и подстановка |
 | `samples/` | реальные отчёты и эталонные аудиты |
-| `test/` | тесты на Node's test runner |
+| `test/` | тесты на Node's test runner, заглушки Vencord в `test/stubs/` |
 | `scripts/deploy-to-windows.sh` | сборка и доставка в Windows-установку Vencord |
 | `LICENSE` | GPL-3.0-or-later, как у Vencord |
 
@@ -263,6 +269,11 @@ esbuild'ом и пишет их как `./parser`, а Node так не умее�
     (`AuditIssue`), а не готовый текст, поэтому от языка не зависят.
   - Описания настроек оформлены геттерами: они читаются в момент отрисовки
     панели, так что смена языка не требует перезапуска Discord.
+  - **Геттеры нельзя раскладывать спредом.** `{ ...describe("key") }` вычисляет
+    геттер немедленно, то есть ещё до создания `settings`, и модуль падает с
+    `ReferenceError: Cannot access 'settings' before initialization`. Это уронило
+    весь renderer Vencord (плагин исчезает целиком, а не ломается) — поймано
+    только вживую, отсюда дымовой тест `test/settings.test.ts`.
   - По-русски в обоих языках остаются строки, уходящие в игру: шаблон аудита и
     названия полей отчёта внутри сообщений об ошибках.
   - Комментарии в коде и документация — по-русски.
