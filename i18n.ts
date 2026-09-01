@@ -29,7 +29,7 @@ const UI = {
         inserted: "Employee audit inserted into the chat box",
 
         promoterName: "Your in-game first and last name — the «Повышает» line",
-        promoterStatic: "Your static ID",
+        promoterStatic: "Your Static ID",
         promoterId: "Your Discord ID. Leave empty to use the current account",
         promoterIdPlaceholder: "automatic",
         channelIds: "Channel IDs where the menu item is shown, comma-separated. Empty — every channel",
@@ -48,7 +48,7 @@ const UI = {
         inserted: "Кадровый аудит вставлен в поле ввода",
 
         promoterName: "Ваше имя и фамилия — строка «Повышает»",
-        promoterStatic: "Ваш статик",
+        promoterStatic: "Ваш Static ID",
         promoterId: "Ваш Discord ID. Пусто — берётся текущий аккаунт",
         promoterIdPlaceholder: "автоматически",
         channelIds: "ID каналов, где показывать пункт меню (через запятую). Пусто — во всех каналах",
@@ -80,7 +80,7 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
             case "missing-name-field":
                 return "Report is missing the «Имя Фамилия | Static ID» field";
             case "unparsable-name":
-                return `Could not parse name and static: «${issue.value}»`;
+                return `Could not parse name and Static ID: «${issue.value}»`;
             case "missing-rank-field":
                 return "Report is missing the rank field";
             case "unparsable-ranks":
@@ -88,9 +88,9 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
             case "no-user-mention":
                 return "No user mention in the report — cannot tell who was promoted";
             case "rank-out-of-table":
-                return `Rank ${issue.rank} («${issue.name}») is outside the EMS table (4–11)`;
+                return `Rank ${issue.rank} («${issue.name}») is outside the mid-level range (4–11)`;
             case "rank-name-mismatch":
-                return `Rank ${issue.rank} is «${issue.name}» in the report, but «${issue.expected}» in the EMS table`;
+                return `Rank ${issue.rank} is «${issue.name}» in the report, but «${issue.expected}» in the rank table`;
             case "rank-jump":
                 return `Promotion is not by a single rank: ${issue.from} → ${issue.to}`;
         }
@@ -102,17 +102,17 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
             case "missing-name-field":
                 return "В отчёте нет поля «Имя Фамилия | Static ID»";
             case "unparsable-name":
-                return `Не разобрать имя и статик: «${issue.value}»`;
+                return `Не удалось разобрать имя и Static ID: «${issue.value}»`;
             case "missing-rank-field":
                 return "В отчёте нет поля с рангами";
             case "unparsable-ranks":
-                return `Не разобрать ранги: «${issue.value}»`;
+                return `Не удалось разобрать ранги: «${issue.value}»`;
             case "no-user-mention":
                 return "В отчёте нет упоминания повышаемого — некого подставить в «Повышен(а)»";
             case "rank-out-of-table":
-                return `Ранг ${issue.rank} («${issue.name}») вне таблицы СМП (4–11)`;
+                return `Ранг ${issue.rank} («${issue.name}») вне диапазона среднего состава (4–11)`;
             case "rank-name-mismatch":
-                return `Ранг ${issue.rank} в отчёте назван «${issue.name}», в таблице СМП — «${issue.expected}»`;
+                return `Ранг ${issue.rank} в отчёте назван «${issue.name}», в таблице рангов — «${issue.expected}»`;
             case "rank-jump":
                 return `Повышение не на один ранг: ${issue.from} → ${issue.to}`;
         }
