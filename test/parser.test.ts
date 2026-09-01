@@ -10,6 +10,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { isChannelAllowed, parseChannelList } from "../channels";
+import { formatIssue, resolveLang } from "../i18n";
 import { parseNameStatic, parseRanks, parseReport, parseTargetUserId } from "../parser";
 import { validateRanks } from "../ranks";
 import { DEFAULT_TEMPLATE, messageLink, renderAudit } from "../template";
@@ -34,7 +35,7 @@ const PROMOTER = {
 
 test("сквозной тест: отчёт 01 → эталонный аудит", () => {
     const result = parseReport(report("01-ordinator-to-senior.json"));
-    assert.ok(result.ok, result.ok ? "" : result.error);
+    assert.ok(result.ok, result.ok ? "" : formatIssue(result.issue, "ru"));
 
     const audit = renderAudit(DEFAULT_TEMPLATE, {
         ...PROMOTER,
@@ -104,21 +105,56 @@ test("проверка по таблице СМП ловит опечатку и
     assert.deepEqual(validateRanks(5, 6, "Ординатор", "Старший ординатор"), []);
     assert.deepEqual(validateRanks(10, 11, "Зам зав отделением", "Заведующий отделением"), []);
 
-    const typo = validateRanks(5, 6, "Ординатор", "Терапевт");
-    assert.equal(typo.length, 1);
-    assert.match(typo[0], /Старший ординатор/); // название ранга остаётся русским
+    assert.deepEqual(validateRanks(5, 6, "Ординатор", "Терапевт"),
+        [{ code: "rank-name-mismatch", rank: 6, name: "Терапевт", expected: "Старший ординатор" }]);
 
-    const jump = validateRanks(5, 7, "Ординатор", "Психиатр");
-    assert.deepEqual(jump, ["Promotion is not by a single rank: 5 → 7"]);
+    assert.deepEqual(validateRanks(5, 7, "Ординатор", "Психиатр"),
+        [{ code: "rank-jump", from: 5, to: 7 }]);
 
     const outOfRange = validateRanks(2, 3, "Стажёр", "Санитар");
     assert.equal(outOfRange.length, 2);
+    assert.equal(outOfRange[0].code, "rank-out-of-table");
+});
+
+test("язык: auto следует за Discord, явный выбор перекрывает", () => {
+    assert.equal(resolveLang("auto", "ru"), "ru");
+    assert.equal(resolveLang("auto", "ru-RU"), "ru");
+    assert.equal(resolveLang("auto", "en-US"), "en");
+    assert.equal(resolveLang("auto", undefined), "en");
+    assert.equal(resolveLang("en", "ru"), "en");
+    assert.equal(resolveLang("ru", "en-US"), "ru");
+});
+
+test("каждая проблема переводится на оба языка и подставляет данные", () => {
+    const issues = [
+        { code: "no-report-embed" },
+        { code: "missing-name-field" },
+        { code: "unparsable-name", value: "Илья Морозов" },
+        { code: "missing-rank-field" },
+        { code: "unparsable-ranks", value: "Ординатор [5]" },
+        { code: "no-user-mention" },
+        { code: "rank-out-of-table", rank: 2, name: "Стажёр" },
+        { code: "rank-name-mismatch", rank: 6, name: "Терапевт", expected: "Старший ординатор" },
+        { code: "rank-jump", from: 5, to: 7 }
+    ] as const;
+
+    for (const issue of issues) {
+        for (const lang of ["en", "ru"] as const) {
+            const text = formatIssue(issue, lang);
+            assert.ok(text && text.length > 5, `${issue.code}/${lang} пустой`);
+        }
+    }
+
+    assert.match(formatIssue(issues[2], "ru"), /Илья Морозов/);
+    assert.match(formatIssue(issues[2], "en"), /Илья Морозов/);
+    assert.equal(formatIssue(issues[8], "en"), "Promotion is not by a single rank: 5 → 7");
+    assert.equal(formatIssue(issues[8], "ru"), "Повышение не на один ранг: 5 → 7");
 });
 
 test("сообщение без отчёта отклоняется с понятной ошибкой", () => {
     const result = parseReport({ content: "привет", embeds: [] });
     assert.equal(result.ok, false);
-    assert.match(result.ok ? "" : result.error, /no promotion report embed/);
+    assert.deepEqual(result.ok ? null : result.issue, { code: "no-report-embed" });
 });
 
 test("фильтр каналов: пустая настройка пропускает всё", () => {

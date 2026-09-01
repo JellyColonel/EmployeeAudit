@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { type AuditIssue } from "./i18n";
+
 /** Ранги отдела «Скорая Медицинская Помощь» (средний состав, 4–11). */
 export const SMP_RANKS: Record<number, string> = {
     4: "Фельдшер",
@@ -26,21 +28,21 @@ function normalizeRankName(name: string): string {
  */
 export function validateRanks(
     oldRank: number, newRank: number, oldRankName: string, newRankName: string
-): string[] {
-    const warnings: string[] = [];
+): AuditIssue[] {
+    const warnings: AuditIssue[] = [];
 
     const checks: [number, string][] = [[oldRank, oldRankName], [newRank, newRankName]];
     for (const [rank, name] of checks) {
         const expected = SMP_RANKS[rank];
         if (!expected) {
-            warnings.push(`Rank ${rank} («${name}») is outside the EMS table (4–11)`);
+            warnings.push({ code: "rank-out-of-table", rank, name });
         } else if (normalizeRankName(expected) !== normalizeRankName(name)) {
-            warnings.push(`Rank ${rank} is «${name}» in the report, but «${expected}» in the EMS table`);
+            warnings.push({ code: "rank-name-mismatch", rank, name, expected });
         }
     }
 
     if (newRank !== oldRank + 1) {
-        warnings.push(`Promotion is not by a single rank: ${oldRank} → ${newRank}`);
+        warnings.push({ code: "rank-jump", from: oldRank, to: newRank });
     }
 
     return warnings;

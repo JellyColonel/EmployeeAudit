@@ -12,13 +12,14 @@ import { Message } from "@vencord/discord-types";
 import { ChannelStore, Menu, showToast, Toasts, UserStore } from "@webpack/common";
 
 import { isChannelAllowed } from "./channels";
+import { type AuditIssue, formatIssue, t } from "./i18n";
 import { isPromotionReport, MessageLike, parseReport } from "./parser";
-import { settings } from "./settings";
+import { currentLang, settings } from "./settings";
 import { AuditData, messageLink, renderAudit } from "./template";
 
 type BuildResult =
-    | { ok: true; text: string; warnings: string[]; }
-    | { ok: false; error: string; };
+    | { ok: true; text: string; warnings: AuditIssue[]; }
+    | { ok: false; issue: AuditIssue; };
 
 function buildAudit(message: Message): BuildResult {
     const result = parseReport(message as unknown as MessageLike);
@@ -26,7 +27,7 @@ function buildAudit(message: Message): BuildResult {
 
     const { report } = result;
     if (!report.targetUserId) {
-        return { ok: false, error: "No user mention in the report — cannot tell who was promoted" };
+        return { ok: false, issue: { code: "no-user-mention" } };
     }
 
     const { promoterId, promoterName, promoterStatic, template } = settings.store;
@@ -49,8 +50,9 @@ function buildAudit(message: Message): BuildResult {
 
 async function handleClick(message: Message) {
     const built = buildAudit(message);
+    const lang = currentLang();
     if (!built.ok) {
-        showToast(built.error, Toasts.Type.FAILURE);
+        showToast(formatIssue(built.issue, lang), Toasts.Type.FAILURE);
         return;
     }
 
@@ -60,11 +62,11 @@ async function handleClick(message: Message) {
 
     if (shouldInsert) insertTextIntoChatInputBox(built.text);
 
-    if (shouldCopy) await copyWithToast(built.text, "Employee audit copied");
-    else if (shouldInsert) showToast("Employee audit inserted into the chat box", Toasts.Type.SUCCESS);
+    if (shouldCopy) await copyWithToast(built.text, t("copied", lang));
+    else if (shouldInsert) showToast(t("inserted", lang), Toasts.Type.SUCCESS);
 
     // Предупреждения не мешают работе: аудит уже собран, но отчёт выглядит странно.
-    for (const warning of built.warnings) showToast(`⚠️ ${warning}`, Toasts.Type.MESSAGE);
+    for (const warning of built.warnings) showToast(`⚠️ ${formatIssue(warning, lang)}`, Toasts.Type.MESSAGE);
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
@@ -75,7 +77,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
     const item = (
         <Menu.MenuItem
             id="vc-employee-audit"
-            label="Copy Employee Audit"
+            label={t("menuLabel", currentLang())}
             icon={NotesIcon}
             leadingAccessory={{ type: "icon", icon: NotesIcon }}
             action={() => handleClick(message)}
@@ -92,7 +94,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
 
 export default definePlugin({
     name: "EmployeeAudit",
-    description: "Builds an employee audit record from a promotion report (Hospital faction, Russia Online)",
+    get description() { return t("pluginDescription", currentLang()); },
     authors: [{ name: "JellyColonel", id: 178560714821206016n }],
     settings,
 
