@@ -5,6 +5,7 @@
  */
 
 import { FIELD_NAME_STATIC, FIELD_RANKS, REPORT_TITLE } from "./constants";
+import { type AuditIssue } from "./i18n";
 import { validateRanks } from "./ranks";
 
 /** Минимальные формы объектов Discord, которые нужны парсеру. */
@@ -40,8 +41,8 @@ export interface ParsedReport {
 
 export type ParseResult =
     /** `warnings` не блокируют копирование — это сигналы о странном отчёте. */
-    | { ok: true; report: ParsedReport; warnings: string[]; }
-    | { ok: false; error: string; };
+    | { ok: true; report: ParsedReport; warnings: AuditIssue[]; }
+    | { ok: false; issue: AuditIssue; };
 
 /** Приводит строку к виду, пригодному для сравнения: нижний регистр, «ё» → «е». */
 function normalize(text: string): string {
@@ -124,19 +125,19 @@ export function parseTargetUserId(content: string): string | null {
 
 export function parseReport(message: MessageLike): ParseResult {
     const embed = findReportEmbed(message);
-    if (!embed) return { ok: false, error: "This message has no promotion report embed" };
+    if (!embed) return { ok: false, issue: { code: "no-report-embed" } };
 
     const nameField = findField(embed, FIELD_NAME_STATIC);
-    if (!nameField) return { ok: false, error: "Report is missing the «Имя Фамилия | Static ID» field" };
+    if (!nameField) return { ok: false, issue: { code: "missing-name-field" } };
 
     const nameStatic = parseNameStatic(fieldValue(nameField));
-    if (!nameStatic) return { ok: false, error: `Could not parse name and static: «${fieldValue(nameField)}»` };
+    if (!nameStatic) return { ok: false, issue: { code: "unparsable-name", value: fieldValue(nameField) } };
 
     const rankField = findField(embed, FIELD_RANKS);
-    if (!rankField) return { ok: false, error: "Report is missing the rank field" };
+    if (!rankField) return { ok: false, issue: { code: "missing-rank-field" } };
 
     const ranks = parseRanks(fieldValue(rankField));
-    if (!ranks) return { ok: false, error: `Could not parse ranks: «${fieldValue(rankField)}»` };
+    if (!ranks) return { ok: false, issue: { code: "unparsable-ranks", value: fieldValue(rankField) } };
 
     return {
         ok: true,
