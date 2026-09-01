@@ -1,5 +1,5 @@
 {
-  "content": "<@&1541779227018526741> | <@282179089203331073>",
+  "content": "<@&1541779227018526741> | <@100000000000000001>",
   "author": { "id": "1542575130168004712", "username": "Ева Повышаловна", "bot": true },
   "embeds": [
     {
@@ -9,13 +9,13 @@
       "footer": { "text": "by Brian(ds: jellycolonel) and Аким (ds: klearsoff)" },
       "timestamp": "2026-08-31T22:11:15.742Z",
       "fields": [
-        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Евгений Курчатов | 45642", "inline": false },
+        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Артур Белов | 10001", "inline": false },
         { "rawName": "Дата последнего повышения", "rawValue": "30.08.2026", "inline": false },
         { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Ординатор [5] → Старший ординатор [6]", "inline": false },
-        { "rawName": "Оказание ПМП днём", "rawValue": "31 | https://disk.yandex.ru/d/cOLrfiubhEerXg", "inline": false },
-        { "rawName": "Оказание ПМП ночью", "rawValue": "59 | https://disk.yandex.ru/d/vRlf1sZ7gXPv8A", "inline": false },
-        { "rawName": "Таблетки в ГКБ им. Склифосовского", "rawValue": "9 | https://disk.yandex.ru/d/awsq2Uy015cUFQ", "inline": false },
-        { "rawName": "Вакцины", "rawValue": "1 | https://disk.yandex.ru/d/gpZy5TJ2Y6ttMQ", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "31 | https://example.com/evidence/07", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "59 | https://example.com/evidence/10", "inline": false },
+        { "rawName": "Таблетки в ГКБ им. Склифосовского", "rawValue": "9 | https://example.com/evidence/06", "inline": false },
+        { "rawName": "Вакцины", "rawValue": "1 | https://example.com/evidence/08", "inline": false },
         { "rawName": "Общее количество баллов (Нужно 300)", "rawValue": "**301**", "inline": false }
       ]
     }

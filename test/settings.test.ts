@@ -15,9 +15,13 @@ import { setLocale } from "./stubs/vencord.mjs";
 const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "channelIds", "action", "template"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
-    assert.equal(settings.store.promoterStatic, "597");
     assert.equal(settings.store.language, "auto");
     assert.equal(settings.store.channelIds, "1538690946156462094");
+
+    // Личные данные не зашиты в дефолты: каждый заполняет свои
+    assert.equal(settings.store.promoterName, "");
+    assert.equal(settings.store.promoterStatic, "");
+    assert.equal(settings.store.promoterId, "");
 });
 
 test("описания читаются лениво и не пустые", () => {

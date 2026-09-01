@@ -1,5 +1,5 @@
 {
-  "content": "<@&1541779227018526741> | <@1010870439028981810>",
+  "content": "<@&1541779227018526741> | <@100000000000000003>",
   "author": { "id": "1542575130168004712", "username": "Ева Повышаловна", "bot": true },
   "embeds": [
     {
@@ -9,12 +9,12 @@
       "footer": { "text": "by Brian(ds: jellycolonel) and Аким (ds: klearsoff)" },
       "timestamp": "2026-08-31T21:16:59.502Z",
       "fields": [
-        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Родион Араев | 10055", "inline": false },
+        { "rawName": "Имя Фамилия | Static ID", "rawValue": "Пётр Соколов | 10003", "inline": false },
         { "rawName": "Дата последнего повышения", "rawValue": "31.08.2026", "inline": false },
         { "rawName": "С какого на какой ранг повышаетесь?", "rawValue": "Старший ординатор [6] → Психиатр [7]", "inline": false },
-        { "rawName": "Оказание ПМП днём", "rawValue": "62 | https://disk.yandex.ru/d/RJs9XR_M3ckv9A", "inline": false },
-        { "rawName": "Оказание ПМП ночью", "rawValue": "80 | https://disk.yandex.ru/d/t9-1y6pvxFO9tQ", "inline": false },
-        { "rawName": "Остальное", "rawValue": "Поставка +25Б\nhttps://disk.yandex.ru/d/W8-0o3WncHcohQ", "inline": false },
+        { "rawName": "Оказание ПМП днём", "rawValue": "62 | https://example.com/evidence/03", "inline": false },
+        { "rawName": "Оказание ПМП ночью", "rawValue": "80 | https://example.com/evidence/09", "inline": false },
+        { "rawName": "Остальное", "rawValue": "Поставка +25Б\nhttps://example.com/evidence/05", "inline": false },
         { "rawName": "Общее количество баллов (Нужно 400)", "rawValue": "**434**", "inline": false }
       ]
     }

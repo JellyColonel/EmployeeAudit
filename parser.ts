@@ -76,7 +76,7 @@ function findField(embed: EmbedLike, pattern: RegExp): EmbedFieldLike | null {
     return embed.fields?.find(f => pattern.test(normalize(fieldName(f)))) ?? null;
 }
 
-/** `Евгений Курчатов | 45642` → имя и статик. Разделителем считается последний `|`. */
+/** `Артур Белов | 10001` → имя и статик. Разделителем считается последний `|`. */
 export function parseNameStatic(value: string): { name: string; staticId: string; } | null {
     const clean = stripMarkdown(value);
     const sep = clean.lastIndexOf("|");

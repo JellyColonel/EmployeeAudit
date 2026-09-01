@@ -28,9 +28,9 @@ function expectedAudit(index: number): string {
 }
 
 const PROMOTER = {
-    promoterId: "178560714821206016",
-    promoterName: "Бронислав Небесный",
-    promoterStatic: "597"
+    promoterId: "100000000000000000",
+    promoterName: "Виктор Громов",
+    promoterStatic: "500"
 };
 
 test("сквозной тест: отчёт 01 → эталонный аудит", () => {
@@ -44,7 +44,7 @@ test("сквозной тест: отчёт 01 → эталонный аудит
         targetStatic: result.report.staticId,
         oldRank: result.report.oldRank,
         newRank: result.report.newRank,
-        reportLink: messageLink("1538690942738112634", "1538690946156462094", "1544107332013662338")
+        reportLink: messageLink("1538690942738112634", "1538690946156462094", "200000000000000001")
     });
 
     assert.equal(audit, expectedAudit(0));
@@ -54,9 +54,9 @@ test("ранг из нескольких слов с точками: Зам. з�
     const result = parseReport(report("02-surgeon-to-deputy.json"));
     assert.ok(result.ok);
     assert.deepEqual(result.report, {
-        targetUserId: "330020218627948545",
-        name: "Эмилия Небесная",
-        staticId: "9200",
+        targetUserId: "100000000000000002",
+        name: "Ольга Ветрова",
+        staticId: "10002",
         oldRank: 9,
         newRank: 10,
         oldRankName: "Хирург",
@@ -68,29 +68,29 @@ test("ранг из нескольких слов с точками: Зам. з�
 test("многострочное поле «Остальное» не мешает разбору", () => {
     const result = parseReport(report("03-senior-to-psychiatrist-ostalnoe.json"));
     assert.ok(result.ok);
-    assert.equal(result.report.name, "Родион Араев");
-    assert.equal(result.report.staticId, "10055");
+    assert.equal(result.report.name, "Пётр Соколов");
+    assert.equal(result.report.staticId, "10003");
     assert.deepEqual([result.report.oldRank, result.report.newRank], [6, 7]);
 });
 
 test("хвост в поле баллов не влияет на разбор", () => {
     const result = parseReport(report("04-senior-to-psychiatrist-meropriyatiya.json"));
     assert.ok(result.ok);
-    assert.equal(result.report.targetUserId, "258188394239098881");
+    assert.equal(result.report.targetUserId, "100000000000000004");
     assert.deepEqual([result.report.oldRank, result.report.newRank], [6, 7]);
 });
 
 test("упоминание роли не принимается за повышаемого", () => {
-    assert.equal(parseTargetUserId("<@&1541779227018526741> | <@282179089203331073>"), "282179089203331073");
+    assert.equal(parseTargetUserId("<@&1541779227018526741> | <@100000000000000001>"), "100000000000000001");
     assert.equal(parseTargetUserId("<@&1541779227018526741>"), null);
-    assert.equal(parseTargetUserId("<@!282179089203331073>"), "282179089203331073");
+    assert.equal(parseTargetUserId("<@!100000000000000001>"), "100000000000000001");
     assert.equal(parseTargetUserId(""), null);
 });
 
 test("имя и статик: markdown и лишние пробелы срезаются", () => {
-    assert.deepEqual(parseNameStatic("Евгений Курчатов | 45642"), { name: "Евгений Курчатов", staticId: "45642" });
-    assert.deepEqual(parseNameStatic("**Андрей Титов|2374**"), { name: "Андрей Титов", staticId: "2374" });
-    assert.equal(parseNameStatic("Андрей Титов"), null);
+    assert.deepEqual(parseNameStatic("Артур Белов | 10001"), { name: "Артур Белов", staticId: "10001" });
+    assert.deepEqual(parseNameStatic("**Илья Морозов|10004**"), { name: "Илья Морозов", staticId: "10004" });
+    assert.equal(parseNameStatic("Илья Морозов"), null);
 });
 
 test("ранги: разные виды стрелки", () => {
@@ -129,7 +129,7 @@ test("каждая проблема переводится на оба язык�
     const issues = [
         { code: "no-report-embed" },
         { code: "missing-name-field" },
-        { code: "unparsable-name", value: "Андрей Титов" },
+        { code: "unparsable-name", value: "Илья Морозов" },
         { code: "missing-rank-field" },
         { code: "unparsable-ranks", value: "Ординатор [5]" },
         { code: "no-user-mention" },
@@ -145,8 +145,8 @@ test("каждая проблема переводится на оба язык�
         }
     }
 
-    assert.match(formatIssue(issues[2], "ru"), /Андрей Титов/);
-    assert.match(formatIssue(issues[2], "en"), /Андрей Титов/);
+    assert.match(formatIssue(issues[2], "ru"), /Илья Морозов/);
+    assert.match(formatIssue(issues[2], "en"), /Илья Морозов/);
     assert.equal(formatIssue(issues[8], "en"), "Promotion is not by a single rank: 5 → 7");
     assert.equal(formatIssue(issues[8], "ru"), "Повышение не на один ранг: 5 → 7");
 });
