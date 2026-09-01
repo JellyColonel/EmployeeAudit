@@ -13,40 +13,40 @@ import { DEFAULT_TEMPLATE } from "./template";
 export const settings = definePluginSettings({
     promoterName: {
         type: OptionType.STRING,
-        description: "Ваше имя и фамилия — строка «Повышает»",
+        description: "Your in-game first and last name — the «Повышает» line",
         default: "Бронислав Небесный",
         placeholder: "Имя Фамилия"
     },
     promoterStatic: {
         type: OptionType.STRING,
-        description: "Ваш статик",
+        description: "Your static ID",
         default: "597",
         placeholder: "597"
     },
     promoterId: {
         type: OptionType.STRING,
-        description: "Ваш Discord ID. Пусто — берётся текущий аккаунт",
+        description: "Your Discord ID. Leave empty to use the current account",
         default: "",
-        placeholder: "автоматически"
+        placeholder: "automatic"
     },
     channelIds: {
         type: OptionType.STRING,
-        description: "ID каналов, где показывать пункт меню (через запятую). Пусто — во всех каналах",
+        description: "Channel IDs where the menu item is shown, comma-separated. Empty — every channel",
         default: DEFAULT_REPORT_CHANNEL_ID,
-        placeholder: "во всех каналах"
+        placeholder: "every channel"
     },
     action: {
         type: OptionType.SELECT,
-        description: "Что делать по клику",
+        description: "What clicking the item does",
         options: [
-            { label: "Скопировать в буфер обмена", value: "copy", default: true },
-            { label: "Вставить в поле ввода", value: "insert" },
-            { label: "И то, и другое", value: "both" }
+            { label: "Copy to clipboard", value: "copy", default: true },
+            { label: "Insert into the chat box", value: "insert" },
+            { label: "Both", value: "both" }
         ]
     },
     template: {
         type: OptionType.STRING,
-        description: "Шаблон аудита. Плейсхолдеры: {promoterId} {promoterName} {promoterStatic} {targetId} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
+        description: "Audit template. Placeholders: {promoterId} {promoterName} {promoterStatic} {targetId} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
         default: DEFAULT_TEMPLATE,
         multiline: true
     }
