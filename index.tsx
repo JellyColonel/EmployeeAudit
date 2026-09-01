@@ -5,7 +5,7 @@
  */
 
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
-import { CopyIcon } from "@components/Icons";
+import { NotesIcon } from "@components/Icons";
 import { copyWithToast, insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
@@ -26,7 +26,7 @@ function buildAudit(message: Message): BuildResult {
 
     const { report } = result;
     if (!report.targetUserId) {
-        return { ok: false, error: "В отчёте нет упоминания повышаемого — некого подставить в «Повышен(а)»" };
+        return { ok: false, error: "No user mention in the report — cannot tell who was promoted" };
     }
 
     const { promoterId, promoterName, promoterStatic, template } = settings.store;
@@ -60,8 +60,8 @@ async function handleClick(message: Message) {
 
     if (shouldInsert) insertTextIntoChatInputBox(built.text);
 
-    if (shouldCopy) await copyWithToast(built.text, "Кадровый аудит скопирован");
-    else if (shouldInsert) showToast("Кадровый аудит вставлен в поле ввода", Toasts.Type.SUCCESS);
+    if (shouldCopy) await copyWithToast(built.text, "Employee audit copied");
+    else if (shouldInsert) showToast("Employee audit inserted into the chat box", Toasts.Type.SUCCESS);
 
     // Предупреждения не мешают работе: аудит уже собран, но отчёт выглядит странно.
     for (const warning of built.warnings) showToast(`⚠️ ${warning}`, Toasts.Type.MESSAGE);
@@ -75,8 +75,9 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
     const item = (
         <Menu.MenuItem
             id="vc-employee-audit"
-            label="Скопировать кадровый аудит"
-            icon={CopyIcon}
+            label="Copy Employee Audit"
+            icon={NotesIcon}
+            leadingAccessory={{ type: "icon", icon: NotesIcon }}
             action={() => handleClick(message)}
         />
     );
@@ -91,7 +92,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
 
 export default definePlugin({
     name: "EmployeeAudit",
-    description: "Собирает текст кадрового аудита из отчёта на повышение (фракция «Больница», Russia Online)",
+    description: "Builds an employee audit record from a promotion report (Hospital faction, Russia Online)",
     authors: [{ name: "JellyColonel", id: 178560714821206016n }],
     settings,
 
