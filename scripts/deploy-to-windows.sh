@@ -4,8 +4,10 @@
 #
 # Работает потому, что установщик Vencord подменил app.asar заглушкой
 #   require("C:\Users\<user>\AppData\Roaming\Vencord\dist\patcher.js")
-# то есть Discord грузит ровно эту папку, а она пишется из WSL. Node на Windows
-# для этого не нужен, `pnpm inject` тоже — инжект уже сделан установщиком.
+# то есть Discord грузит ровно эту папку. Путь виндовый, но из WSL он доступен на
+# запись через /mnt/c, поэтому собранный здесь dist кладётся туда напрямую.
+# Node на Windows для этого не нужен, `pnpm inject` тоже — инжект уже сделан
+# установщиком.
 set -euo pipefail
 
 VENCORD_REPO="${VENCORD_REPO:-$HOME/projects/Vencord}"
