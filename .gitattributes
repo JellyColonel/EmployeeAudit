@@ -1,0 +1,9 @@
+# Установщики для Windows: перевод строк и BOM должны дойти до пользователя
+# в исходном виде. PowerShell 5.1 без BOM читает .ps1 как ANSI и ломает
+# кириллицу, а .bat с одними LF ведёт себя непредсказуемо.
+dist-package/*.bat  text eol=crlf
+dist-package/*.ps1  text eol=crlf
+dist-package/*.txt  text eol=crlf
+
+# Скрипты для WSL/Linux — только LF
+*.sh                text eol=lf
