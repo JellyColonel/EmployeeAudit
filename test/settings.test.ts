@@ -22,7 +22,7 @@ const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "chann
     "roleThreshold", "rolesToAdd", "rolesToRemove", "department", "auditChannelId", "reactionEmoji",
     "stepCopyCommand", "showDismissItem", "stepDismissalRoles", "stepDismissalNickname",
     "stepDismissalReaction", "stepDismissalCommand", "citizenRoleId", "dismissalDepartment",
-    "dismissalCommandTemplate"] as const;
+    "dismissalCommandTemplate", "dismissalNoDiscordCommandTemplate"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");

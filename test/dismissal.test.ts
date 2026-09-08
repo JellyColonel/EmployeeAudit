@@ -10,8 +10,9 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { isDismissalRequest, parseDismissal, parseNickParts, parseUserId } from "../dismissal";
-import { buildDismissalPlan, type DismissalSettings } from "../dismissalPlan";
+import { buildDismissalPlan, type DismissalSettings, renderDismissalCommand } from "../dismissalPlan";
 import { isPromotionReport, isShortPromotion } from "../parser";
+import { DEFAULT_DISMISSAL_COMMAND_TEMPLATE, DEFAULT_DISMISSAL_NO_DISCORD_COMMAND_TEMPLATE } from "../template";
 
 const SETTINGS: DismissalSettings = {
     stepDismissalRoles: true,
@@ -144,4 +145,33 @@ test("роль гражданина уже единственная — шага
     assert.ok(plan.ok);
     assert.equal(plan.plan.roles, null);
     assert.equal(plan.plan.nickname, null, "отдел в нике уже «Гр.»");
+});
+
+test("ушедшему с сервера идёт своя команда, без упоминания", () => {
+    const result = parseDismissal(sample("06-dismissal.json"));
+    assert.ok(result.ok);
+
+    const { dismissal } = result;
+    const data = {
+        targetId: dismissal.targetUserId,
+        targetName: dismissal.name,
+        targetStatic: dismissal.staticId,
+        department: dismissal.department,
+        rank: dismissal.rank,
+        reason: dismissal.reason,
+        reportLink: "https://discord.com/channels/1/2/3",
+        inventoryLink: dismissal.inventoryLink
+    };
+    const templates = {
+        present: DEFAULT_DISMISSAL_COMMAND_TEMPLATE,
+        gone: DEFAULT_DISMISSAL_NO_DISCORD_COMMAND_TEMPLATE
+    };
+
+    assert.equal(renderDismissalCommand(templates, data, false),
+        "/увольнение пользователь:<@100000000000000002> ранг:6 причина:https://discord.com/channels/1/2/3");
+
+    // Упоминания нет: разрешать его не в кого, поэтому имя строкой, ID отдельно
+    assert.equal(renderDismissalCommand(templates, data, true),
+        "/увольнение_без_дискорда пользователь:Ольга Юрьева статик:66242"
+        + " discord_id:100000000000000002 ранг:6 причина:https://discord.com/channels/1/2/3");
 });

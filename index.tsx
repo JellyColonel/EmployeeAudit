@@ -19,7 +19,7 @@ import { type AuditIssue, formatIssue, type Lang, t, type UiKey } from "./i18n";
 import { isPromotionReport, isShortPromotion, MessageLike, type ParsedReport, parseReport } from "./parser";
 import { runPromotion } from "./promote";
 import { currentLang, settings } from "./settings";
-import { AuditData, type DismissalData, messageLink, renderAudit, renderDismissal, usesPlaceholder } from "./template";
+import { AuditData, type DismissalData, messageLink, renderAudit, usesPlaceholder } from "./template";
 
 type BuildResult =
     | { ok: true; text: string; }
@@ -158,11 +158,18 @@ async function handleDismiss(message: Message) {
         inventoryLink: dismissal.inventoryLink
     };
 
-    const commandText = settings.store.stepDismissalCommand
-        ? renderDismissal(settings.store.dismissalCommandTemplate, data)
-        : "";
-
-    await runDismissal({ message, dismissal, commandText, lang });
+    // Какая из команд нужна, известно только после проверки, остался ли человек
+    // на сервере, поэтому сюда уходят обе.
+    await runDismissal({
+        message,
+        dismissal,
+        data,
+        templates: {
+            present: settings.store.dismissalCommandTemplate,
+            gone: settings.store.dismissalNoDiscordCommandTemplate
+        },
+        lang
+    });
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {

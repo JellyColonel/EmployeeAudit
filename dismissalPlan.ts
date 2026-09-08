@@ -8,6 +8,22 @@ import { parseIdList } from "./channels";
 import { type ParsedDismissal } from "./dismissal";
 import { type AuditIssue } from "./i18n";
 import { NICK_MAX_LENGTH, renameDepartment } from "./nickname";
+import { type DismissalData, renderDismissal } from "./template";
+
+/** Шаблоны команды: для оставшегося на сервере и для ушедшего. */
+export interface DismissalCommandTemplates {
+    present: string;
+    gone: string;
+}
+
+/**
+ * Команда зависит от того, есть ли человек на сервере: у бота для ушедших своя,
+ * `/увольнение_без_дискорда`, где имя передаётся строкой, а Discord ID —
+ * отдельным аргументом. Упоминание там не сработало бы: разрешать его не в кого.
+ */
+export function renderDismissalCommand(templates: DismissalCommandTemplates, data: DismissalData, gone: boolean): string {
+    return renderDismissal(gone ? templates.gone : templates.present, data);
+}
 
 /** Что известно об увольняемом на сервере. `null` — его там уже нет. */
 export interface MemberState {

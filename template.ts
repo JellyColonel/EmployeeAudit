@@ -68,6 +68,14 @@ export interface DismissalData {
 export const DEFAULT_DISMISSAL_COMMAND_TEMPLATE =
     "/увольнение пользователь:<@{targetId}> ранг:{rank} причина:{reportLink}";
 
+/**
+ * Тот же аудит, когда увольняемого на сервере уже нет. Упоминание для него не
+ * годится — бот не сможет разрешить того, кого нет, — поэтому имя передаётся
+ * строкой, а Discord ID отдельным аргументом.
+ */
+export const DEFAULT_DISMISSAL_NO_DISCORD_COMMAND_TEMPLATE =
+    "/увольнение_без_дискорда пользователь:{targetName} статик:{targetStatic} discord_id:{targetId} ранг:{rank} причина:{reportLink}";
+
 /** Ссылка на сообщение-отчёт, идущая в строку «Причина повышения». */
 export function messageLink(guildId: string | null | undefined, channelId: string, messageId: string): string {
     return `https://discord.com/channels/${guildId ?? "@me"}/${channelId}/${messageId}`;
