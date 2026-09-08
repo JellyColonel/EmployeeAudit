@@ -32,6 +32,7 @@ export type AuditIssue =
     | { code: "audit-channel-not-set"; }
     | { code: "reaction-not-set"; }
     | { code: "empty-command"; }
+    | { code: "no-dismissal-embed"; }
     | { code: "unknown-role"; value: string; }
     | { code: "role-too-high"; value: string; }
     | { code: "nothing-to-do"; };
@@ -216,6 +217,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Fill in the checkmark emoji in the plugin settings first";
             case "empty-command":
                 return "The bot command came out empty — check its template in the settings";
+            case "no-dismissal-embed":
+                return "This message is not a dismissal request";
             case "unknown-role":
                 return `This server has no role with ID ${issue.value} — check the role IDs in the settings`;
             case "role-too-high":
@@ -268,6 +271,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Сначала укажите в настройках плагина эмодзи для отметки";
             case "empty-command":
                 return "Команда бота вышла пустой — проверьте её шаблон в настройках";
+            case "no-dismissal-embed":
+                return "Сообщение не похоже на заявление на увольнение";
             case "unknown-role":
                 return `На сервере нет роли с ID ${issue.value} — проверьте ID ролей в настройках`;
             case "role-too-high":

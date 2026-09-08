@@ -1,0 +1,21 @@
+{
+  "content": "<@100000000000000002> **отправляет заявление на увольнение**",
+  "author": {
+    "id": "1275456129270284400",
+    "username": "MajesticStateBot",
+    "bot": true
+  },
+  "embeds": [
+    {
+      "type": "rich",
+      "fields": [
+        { "rawName": "Запрашивает увольнение :", "rawValue": "<@100000000000000002>", "inline": true },
+        { "rawName": "Имя Фамилия :", "rawValue": "ПСЭС | Ольга Юрьева | 66242", "inline": true },
+        { "rawName": "Discord ID :", "rawValue": "`100000000000000002`", "inline": true },
+        { "rawName": "Ранг :", "rawValue": "`6`", "inline": true },
+        { "rawName": "Скриншоты инвентаря :", "rawValue": "https://example.com/inventory/12345", "inline": true },
+        { "rawName": "Причина увольнения :", "rawValue": "Ухожу по личным обстоятельствам", "inline": true }
+      ]
+    }
+  ]
+}
