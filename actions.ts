@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
+import { copyToClipboard } from "@utils/clipboard";
 import { sendMessage } from "@utils/discord";
 import { RestAPI } from "@webpack/common";
 
@@ -41,7 +42,7 @@ export function addReaction(channelId: string, messageId: string, emoji: string)
 }
 
 /** Шаги плана в порядке выполнения — они же ключи для сообщений. */
-export type PromotionStep = "roles" | "nickname" | "audit" | "reaction";
+export type PromotionStep = "roles" | "nickname" | "audit" | "reaction" | "command";
 
 export interface ExecutionResult {
     /** Шаги, выполненные успешно, в порядке выполнения. */
@@ -63,8 +64,11 @@ export interface ExecutionTarget {
  * потому что каждый следующий шаг заявляет о результате предыдущего.
  *
  * Порядок не случаен: роли и ник — то, ради чего всё делается; аудит фиксирует
- * уже сделанное; галочка ставится последней и означает «сообщение отработано
- * целиком». Если что-то упало, галочки не будет, и это видно в списке сообщений.
+ * уже сделанное; галочка означает «сообщение отработано целиком». Если что-то
+ * упало, галочки не будет, и это видно в списке сообщений.
+ *
+ * Команда бота копируется в самом конце: буфер обмена стоит занимать только
+ * тогда, когда остальное действительно прошло.
  */
 export async function executePlan(plan: PromotionPlan, target: ExecutionTarget): Promise<ExecutionResult> {
     const done: PromotionStep[] = [];
@@ -91,6 +95,11 @@ export async function executePlan(plan: PromotionPlan, target: ExecutionTarget):
             await addReaction(channelId, messageId, plan.reaction);
             done.push("reaction");
         }
+
+        if (plan.command) {
+            await copyToClipboard(plan.command);
+            done.push("command");
+        }
     } catch (error) {
         const failed = nextStep(plan, done);
         return { done, failed, error };
@@ -101,7 +110,7 @@ export async function executePlan(plan: PromotionPlan, target: ExecutionTarget):
 
 /** Какой шаг плана шёл следующим после уже выполненных — на нём и упало. */
 function nextStep(plan: PromotionPlan, done: PromotionStep[]): PromotionStep {
-    const order: PromotionStep[] = ["roles", "nickname", "audit", "reaction"];
+    const order: PromotionStep[] = ["roles", "nickname", "audit", "reaction", "command"];
     const planned = order.filter(step => plan[step] != null);
     return planned.find(step => !done.includes(step)) ?? "roles";
 }

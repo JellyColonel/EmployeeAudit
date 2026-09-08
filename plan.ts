@@ -30,6 +30,8 @@ export interface PromotionPlan {
     nickname: { from: string; to: string; } | null;
     audit: { channelId: string; text: string; } | null;
     reaction: string | null;
+    /** Текст команды бота, который кладётся в буфер обмена. */
+    command: string | null;
 }
 
 export interface PlanSettings {
@@ -37,6 +39,7 @@ export interface PlanSettings {
     stepNickname: boolean;
     stepAudit: boolean;
     stepReaction: boolean;
+    stepCopyCommand: boolean;
     roleThreshold: number;
     rolesToAdd: string;
     rolesToRemove: string;
@@ -50,6 +53,8 @@ export interface PlanInput {
     settings: PlanSettings;
     /** Текст аудита, уже собранный по шаблону. */
     auditText: string;
+    /** Вызов команды бота, уже собранный по шаблону. */
+    commandText: string;
     /** Текущий ник повышаемого на сервере; null — ника нет. */
     currentNick: string | null;
 }
@@ -63,8 +68,8 @@ export type PlanResult =
  * идёт и в окно подтверждения, и в исполнитель, поэтому показанное и сделанное
  * разойтись не могут.
  */
-export function buildPlan({ report, settings, auditText, currentNick }: PlanInput): PlanResult {
-    const plan: PromotionPlan = { roles: null, nickname: null, audit: null, reaction: null };
+export function buildPlan({ report, settings, auditText, commandText, currentNick }: PlanInput): PlanResult {
+    const plan: PromotionPlan = { roles: null, nickname: null, audit: null, reaction: null, command: null };
     const crosses = crossesRoleBoundary(report.oldRank, report.newRank, settings.roleThreshold);
 
     if (settings.stepRoles && crosses) {
@@ -99,10 +104,15 @@ export function buildPlan({ report, settings, auditText, currentNick }: PlanInpu
         plan.reaction = emoji;
     }
 
+    if (settings.stepCopyCommand) {
+        if (!commandText.trim()) return { ok: false, issue: { code: "empty-command" } };
+        plan.command = commandText;
+    }
+
     return { ok: true, plan };
 }
 
 /** Есть ли в плане хоть что-то, что нужно выполнять. */
 export function isPlanEmpty(plan: PromotionPlan): boolean {
-    return !plan.roles && !plan.nickname && !plan.audit && !plan.reaction;
+    return !plan.roles && !plan.nickname && !plan.audit && !plan.reaction && !plan.command;
 }

@@ -19,7 +19,8 @@ import { setLocale } from "./stubs/vencord.mjs";
 const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "channelIds", "action",
     "showAuditItem", "showCommandItem", "template", "commandTemplate",
     "showPromoteItem", "stepRoles", "stepNickname", "stepAudit", "stepReaction",
-    "roleThreshold", "rolesToAdd", "rolesToRemove", "department", "auditChannelId", "reactionEmoji"] as const;
+    "roleThreshold", "rolesToAdd", "rolesToRemove", "department", "auditChannelId", "reactionEmoji",
+    "stepCopyCommand"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
@@ -47,6 +48,7 @@ test("повышение выключено по умолчанию, а его �
     assert.equal(settings.store.stepRoles, true);
     assert.equal(settings.store.stepNickname, true);
     assert.equal(settings.store.stepReaction, true);
+    assert.equal(settings.store.stepCopyCommand, true);
 
     // Кроме текстового аудита: его теперь пишет бот по /повышение, а команду
     // плагин отправить не может — она ушла бы обычным сообщением

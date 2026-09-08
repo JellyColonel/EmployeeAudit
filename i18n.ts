@@ -31,6 +31,7 @@ export type AuditIssue =
     | { code: "nickname-too-long"; value: string; }
     | { code: "audit-channel-not-set"; }
     | { code: "reaction-not-set"; }
+    | { code: "empty-command"; }
     | { code: "nothing-to-do"; };
 
 const UI = {
@@ -65,6 +66,7 @@ const UI = {
         stepNickname: "Promotion step: change the server nickname",
         stepAudit: "Promotion step: post the audit text",
         stepReaction: "Promotion step: react to the report message",
+        stepCopyCommand: "Promotion step: copy the /повышение command to the clipboard. The plugin cannot send a slash command itself, so the last step stays manual: pick the command in the audit channel and paste the arguments",
         roleThreshold: "Rank at which the middle staff starts. Roles and the department in the nickname change only when a promotion crosses this line (3 → 4)",
         rolesToAdd: "Role IDs granted when crossing into the middle staff, comma-separated",
         rolesToRemove: "Role IDs taken away when crossing into the middle staff, comma-separated",
@@ -82,12 +84,15 @@ const UI = {
         summaryNickname: "Nickname",
         summaryAudit: "Post the audit to",
         summaryReaction: "React with",
+        summaryCommand: "Copy the command",
 
         stepNameRoles: "roles",
         stepNameNickname: "nickname",
         stepNameAudit: "audit",
         stepNameReaction: "checkmark",
+        stepNameCommand: "command",
         promotionDone: "Promotion carried out",
+        promotionDoneCommand: "Promotion carried out, the command is in the clipboard",
         promotionFailedAt: "Failed at step",
         promotionCompleted: "Completed"
     },
@@ -122,6 +127,7 @@ const UI = {
         stepNickname: "Шаг повышения: менять никнейм на сервере",
         stepAudit: "Шаг повышения: публиковать текст аудита",
         stepReaction: "Шаг повышения: ставить реакцию на сообщение-отчёт",
+        stepCopyCommand: "Шаг повышения: копировать команду /повышение в буфер обмена. Отправить slash-команду плагин не может, поэтому последний шаг остаётся ручным: выбрать команду в канале аудита и вставить аргументы",
         roleThreshold: "Ранг, с которого начинается средний состав. Роли и отдел в нике меняются, только если повышение пересекает эту границу (3 → 4)",
         rolesToAdd: "ID ролей, которые выдаются при переходе в средний состав (через запятую)",
         rolesToRemove: "ID ролей, которые снимаются при переходе в средний состав (через запятую)",
@@ -139,12 +145,15 @@ const UI = {
         summaryNickname: "Никнейм",
         summaryAudit: "Аудит в канал",
         summaryReaction: "Реакция",
+        summaryCommand: "Скопировать команду",
 
         stepNameRoles: "роли",
         stepNameNickname: "ник",
         stepNameAudit: "аудит",
         stepNameReaction: "галочка",
+        stepNameCommand: "команда",
         promotionDone: "Повышение проведено",
+        promotionDoneCommand: "Повышение проведено, команда в буфере обмена",
         promotionFailedAt: "Ошибка на шаге",
         promotionCompleted: "Выполнено"
     }
@@ -203,6 +212,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Fill in the audit channel ID in the plugin settings first";
             case "reaction-not-set":
                 return "Fill in the checkmark emoji in the plugin settings first";
+            case "empty-command":
+                return "The bot command came out empty — check its template in the settings";
             case "nothing-to-do":
                 return "Every promotion step is turned off — there is nothing to do";
         }
@@ -249,6 +260,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Сначала укажите в настройках плагина ID канала для аудита";
             case "reaction-not-set":
                 return "Сначала укажите в настройках плагина эмодзи для отметки";
+            case "empty-command":
+                return "Команда бота вышла пустой — проверьте её шаблон в настройках";
             case "nothing-to-do":
                 return "Все шаги повышения выключены — делать нечего";
         }

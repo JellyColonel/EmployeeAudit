@@ -16,6 +16,7 @@ const SETTINGS: PlanSettings = {
     stepNickname: true,
     stepAudit: true,
     stepReaction: true,
+    stepCopyCommand: true,
     roleThreshold: DEFAULT_ROLE_THRESHOLD,
     rolesToAdd: "1538690943107072086",
     rolesToRemove: "1538690943107072085",
@@ -43,6 +44,7 @@ function plan(over: Partial<ParsedReport> = {}, settings: Partial<PlanSettings> 
         report: report(over),
         settings: { ...SETTINGS, ...settings },
         auditText: "Повышение\n…",
+        commandText: "/повышение пользователь:<@921022797029994507> был:3 стал:4 причина:https://example.com",
         currentNick
     });
 }
@@ -69,6 +71,7 @@ test("вход в средний состав: роли и отдел в ник�
     });
     assert.equal(result.plan.audit?.channelId, "1538690946156462094");
     assert.equal(result.plan.reaction, "✅");
+    assert.match(result.plan.command!, /^\/повышение /);
 });
 
 test("повышение внутри состава роли и ник не трогает", () => {
@@ -88,10 +91,22 @@ test("выключенные шаги в план не попадают", () => 
     assert.equal(result.plan.roles, null);
     assert.equal(result.plan.audit, null);
     assert.ok(result.plan.nickname);
+    assert.ok(result.plan.command, "команда не зависит от выключенного аудита");
+});
+
+test("команда копируется и при повышении внутри состава", () => {
+    // Ради этого шаг и нужен: роли с ником там не меняются, а /повышение
+    // вызывать всё равно надо — плагин отправить её не может.
+    const result = plan({ oldRank: 5, newRank: 6 }, { stepAudit: false });
+    assert.ok(result.ok);
+    assert.equal(result.plan.roles, null);
+    assert.equal(result.plan.nickname, null);
+    assert.ok(result.plan.command);
+    assert.equal(result.plan.reaction, "✅");
 });
 
 test("план без единого шага виден как пустой", () => {
-    const result = plan({}, { stepRoles: false, stepNickname: false, stepAudit: false, stepReaction: false });
+    const result = plan({}, { stepRoles: false, stepNickname: false, stepAudit: false, stepReaction: false, stepCopyCommand: false });
     assert.ok(result.ok);
     assert.equal(isPlanEmpty(result.plan), true);
 });

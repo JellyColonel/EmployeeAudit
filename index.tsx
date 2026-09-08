@@ -100,26 +100,34 @@ async function handleCopy(message: Message, template: string, toasts: { copied: 
 }
 
 /**
- * Повышение целиком: роли, ник, аудит и галочка. Текст аудита собирается здесь
- * и только если шаг публикации включён — иначе незаполненные данные о самом
- * повышающем блокировали бы смену ролей, к которой они отношения не имеют.
+ * Повышение целиком: роли, ник, аудит, галочка и команда в буфере. Тексты
+ * собираются здесь и только для включённых шагов — иначе незаполненные данные
+ * о самом повышающем блокировали бы смену ролей, к которой они отношения не
+ * имеют.
  */
 async function handlePromote(message: Message) {
     const lang = currentLang();
     const report = parseOrToast(message, lang);
     if (!report) return;
 
-    let auditText = "";
-    if (settings.store.stepAudit) {
-        const built = buildAudit(message, report, settings.store.template);
+    const texts = { auditText: "", commandText: "" };
+    const steps = [
+        { enabled: settings.store.stepAudit, template: settings.store.template, key: "auditText" },
+        { enabled: settings.store.stepCopyCommand, template: settings.store.commandTemplate, key: "commandText" }
+    ] as const;
+
+    for (const { enabled, template, key } of steps) {
+        if (!enabled) continue;
+
+        const built = buildAudit(message, report, template);
         if (!built.ok) {
             showToast(formatIssue(built.issue, lang), Toasts.Type.FAILURE);
             return;
         }
-        auditText = built.text;
+        texts[key] = built.text;
     }
 
-    await runPromotion({ message, report, auditText, lang });
+    await runPromotion({ message, report, ...texts, lang });
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {

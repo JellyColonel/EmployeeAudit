@@ -119,6 +119,11 @@ export const settings = definePluginSettings({
         get description() { return t("stepReaction", currentLang()); },
         default: true
     },
+    stepCopyCommand: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepCopyCommand", currentLang()); },
+        default: true
+    },
     roleThreshold: {
         type: OptionType.NUMBER,
         get description() { return t("roleThreshold", currentLang()); },

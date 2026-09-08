@@ -62,6 +62,9 @@ function summaryRows(plan: PromotionPlan, report: ParsedReport, guildId: string,
     if (plan.reaction) {
         rows.push([t("summaryReaction", lang), plan.reaction]);
     }
+    if (plan.command) {
+        rows.push([t("summaryCommand", lang), plan.command]);
+    }
 
     return rows;
 }
@@ -90,11 +93,14 @@ function reportResult(result: ExecutionResult, lang: Lang): void {
         roles: t("stepNameRoles", lang),
         nickname: t("stepNameNickname", lang),
         audit: t("stepNameAudit", lang),
-        reaction: t("stepNameReaction", lang)
+        reaction: t("stepNameReaction", lang),
+        command: t("stepNameCommand", lang)
     };
 
     if (!result.failed) {
-        showToast(t("promotionDone", lang), Toasts.Type.SUCCESS);
+        // Про буфер обмена стоит сказать явно: иначе неясно, что там уже лежит
+        const key = result.done.includes("command") ? "promotionDoneCommand" : "promotionDone";
+        showToast(t(key, lang), Toasts.Type.SUCCESS);
         return;
     }
 
@@ -111,6 +117,8 @@ export interface PromoteContext {
     report: ParsedReport;
     /** Текст аудита; пустой, если шаг публикации выключен. */
     auditText: string;
+    /** Вызов команды бота; пустой, если шаг копирования выключен. */
+    commandText: string;
     lang: Lang;
 }
 
@@ -119,7 +127,7 @@ export interface PromoteContext {
  * можно проверить заранее, проверяется до окна подтверждения, чтобы отказ не
  * приходил уже после согласия.
  */
-export async function runPromotion({ message, report, auditText, lang }: PromoteContext): Promise<void> {
+export async function runPromotion({ message, report, auditText, commandText, lang }: PromoteContext): Promise<void> {
     const fail = (issue: AuditIssue) => showToast(formatIssue(issue, lang), Toasts.Type.FAILURE);
 
     const guildId = ChannelStore.getChannel(message.channel_id)?.guild_id;
@@ -132,6 +140,7 @@ export async function runPromotion({ message, report, auditText, lang }: Promote
         report,
         settings: settings.store,
         auditText,
+        commandText,
         currentNick: GuildMemberStore.getNick(guildId, targetUserId)
     });
     if (!built.ok) return fail(built.issue);
