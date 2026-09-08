@@ -35,7 +35,10 @@ cp "$REPO_ROOT"/dist-package/install.bat "$REPO_ROOT"/dist-package/install.ps1 \
    "$REPO_ROOT"/dist-package/update.bat "$REPO_ROOT"/dist-package/update.ps1 \
    "$REPO_ROOT"/dist-package/README.txt "$PKG/"
 
-ZIP="$REPO_ROOT/EmployeeAudit-$TAG.zip"
+# Имя архива постоянное, без тега: update.ps1 запасным путём тянет его по
+# ссылке releases/latest/download/EmployeeAudit.zip, минуя api.github.com,
+# который у части российских провайдеров заблокирован, в отличие от github.com.
+ZIP="$REPO_ROOT/EmployeeAudit.zip"
 rm -f "$ZIP"
 python3 - "$STAGE" "$ZIP" << 'PY'
 import os, sys, zipfile
