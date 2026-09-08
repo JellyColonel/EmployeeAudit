@@ -99,6 +99,9 @@ const UI = {
         promotionDone: "Promotion carried out",
         promotionDoneCommand: "Done, the command is in the clipboard",
 
+        sectionPromotion: "Promotion",
+        sectionDismissal: "Dismissal",
+
         menuLabelDismiss: "Carry Out Dismissal",
         showDismissItem: "Show the «Carry Out Dismissal» menu item. It takes away every role, leaves the citizen one, renames the department in the nickname and copies the /увольнение command",
         stepDismissalRoles: "Dismissal step: take away every role and grant the citizen one",
@@ -178,6 +181,9 @@ const UI = {
         stepNameCommand: "команда",
         promotionDone: "Повышение проведено",
         promotionDoneCommand: "Готово, команда в буфере обмена",
+
+        sectionPromotion: "Повышение",
+        sectionDismissal: "Увольнение",
 
         menuLabelDismiss: "Провести увольнение",
         showDismissItem: "Показывать пункт «Провести увольнение». Он снимает все роли, оставляет роль гражданина, меняет отдел в нике и копирует команду /увольнение",

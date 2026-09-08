@@ -11,10 +11,18 @@ import { registerHooks } from "node:module";
 // Модули Vencord подменяются заглушками: под Node их не существует.
 const VENCORD_STUBS = new Set(["@api/Settings", "@utils/types", "@webpack/common"]);
 
+// И свои файлы с JSX: типы Node снимать умеет, разметку — нет.
+const LOCAL_STUBS = new Map([["./sections", "./stubs/sections.mjs"]]);
+
 registerHooks({
     resolve(specifier, context, nextResolve) {
         if (VENCORD_STUBS.has(specifier)) {
             return nextResolve("./stubs/vencord.mjs", { ...context, parentURL: import.meta.url });
+        }
+
+        const localStub = LOCAL_STUBS.get(specifier);
+        if (localStub) {
+            return nextResolve(localStub, { ...context, parentURL: import.meta.url });
         }
 
         if (specifier.startsWith(".") && !/\.[cm]?[jt]sx?$/.test(specifier)) {

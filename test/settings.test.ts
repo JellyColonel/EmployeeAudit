@@ -24,6 +24,9 @@ const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "chann
     "stepDismissalReaction", "stepDismissalCommand", "citizenRoleId", "dismissalDepartment",
     "dismissalCommandTemplate", "dismissalNoDiscordCommandTemplate"] as const;
 
+/** Заголовки секций — настройки типа COMPONENT: у них нет ни описания, ни значения. */
+const SECTIONS = ["promotionSection", "dismissalSection"] as const;
+
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
     // Три канала: отчёты бота, заявки руками и заявления на увольнение
@@ -69,6 +72,26 @@ test("повышение выключено по умолчанию, а его �
     // Канал аудита один на фракцию, как и каналы отчётов
     assert.equal(settings.store.auditChannelId, DEFAULT_AUDIT_CHANNEL_ID);
     assert.deepEqual(parseChannelList(DEFAULT_AUDIT_CHANNEL_ID), [DEFAULT_AUDIT_CHANNEL_ID]);
+});
+
+test("секции свёрнуты по умолчанию и прячут свою группу", () => {
+    for (const key of SECTIONS) {
+        assert.equal(settings.store[key], false, `${key}: секция должна быть свёрнута`);
+    }
+
+    // Пока секция свёрнута, её настройки скрыты, и наоборот — иначе группировка
+    // просто ничего не делала бы.
+    const { hidden } = settings.def.roleThreshold;
+    assert.equal(typeof hidden, "function");
+
+    settings.store.promotionSection = false;
+    assert.equal(hidden(), true);
+
+    settings.store.promotionSection = true;
+    assert.equal(hidden(), false);
+
+    settings.store.promotionSection = false;
+    assert.equal(settings.def.citizenRoleId.hidden(), true, "увольнение прячется своим переключателем");
 });
 
 test("описания читаются лениво и не пустые", () => {
