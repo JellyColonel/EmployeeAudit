@@ -7,8 +7,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-// Сам факт успешного импорта — половина проверки: сломанная версия падала
-// именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
+// Сам факт успешного импорта «../settings» — половина проверки: сломанная версия
+// падала именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
+import { parseChannelList } from "../channels";
+import { DEFAULT_CHANNEL_IDS, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
 import { currentLang, settings } from "../settings";
 import { DEFAULT_COMMAND_TEMPLATE } from "../template";
 import { setLocale } from "./stubs/vencord.mjs";
@@ -18,7 +20,9 @@ const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "chann
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
-    assert.equal(settings.store.channelIds, "1538690946156462094");
+    // Оба канала: отчёты бота и заявки, написанные руками
+    assert.equal(settings.store.channelIds, DEFAULT_CHANNEL_IDS);
+    assert.deepEqual(parseChannelList(DEFAULT_CHANNEL_IDS), [DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID]);
 
     // Личные данные не зашиты в дефолты: каждый заполняет свои
     assert.equal(settings.store.promoterName, "");

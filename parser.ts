@@ -28,15 +28,29 @@ export interface MessageLike {
     embeds?: EmbedLike[];
 }
 
+/**
+ * Откуда взяты данные. `embed` — отчёт бота «Ева Повышаловна»; `short` — заявка,
+ * написанная руками: упоминание, ранги строкой `3-4`, ссылка на отчёт и пинги
+ * ролей, которые в аудит не идут.
+ */
+export type ReportSource = "embed" | "short";
+
 export interface ParsedReport {
     /** Discord ID повышаемого; null, если упоминания в content не оказалось. */
     targetUserId: string | null;
+    /** Имя и статик есть только в embed-отчёте: в короткой заявке их не пишут. */
     name: string;
     staticId: string;
     oldRank: number;
     newRank: number;
     oldRankName: string;
     newRankName: string;
+    /**
+     * Ссылка-причина из текста заявки. У embed-отчёта её нет: там причиной
+     * служит ссылка на само сообщение с отчётом.
+     */
+    reportLink?: string;
+    source: ReportSource;
 }
 
 export type ParseResult =
@@ -115,17 +129,52 @@ export function parseRanks(value: string): {
 }
 
 /**
- * Discord ID повышаемого из `content` вида `<@&роль> | <@пользователь>`.
- * Упоминания ролей (`<@&…>`) игнорируются; берётся последнее упоминание пользователя.
+ * Discord ID повышаемого. Упоминания ролей (`<@&…>`) не считаются — в отчёте
+ * первым идёт пинг проверяющих, а в заявке роли стоят последней строкой.
+ *
+ * Поэтому сторона выбирается по формату: в отчёте (`<@&роль> | <@пользователь>`)
+ * повышаемый последний, в заявке — первый, ещё до ссылки и пингов.
  */
-export function parseTargetUserId(content: string): string | null {
+export function parseTargetUserId(content: string, pick: "first" | "last" = "last"): string | null {
     const mentions = [...content.matchAll(/<@!?(\d+)>/g)];
-    return mentions.length ? mentions[mentions.length - 1][1] : null;
+    if (!mentions.length) return null;
+    return pick === "first" ? mentions[0][1] : mentions[mentions.length - 1][1];
+}
+
+/**
+ * Ранги короткой заявки: `3-4` отдельной строкой. Строка должна состоять только
+ * из них — иначе «с 3-4 попытки» в обычном сообщении сошло бы за заявку.
+ */
+export function parseShortRanks(content: string): { oldRank: number; newRank: number; } | null {
+    for (const line of content.split(/\r?\n/)) {
+        const match = /^\s*(\d{1,2})\s*(?:-{1,2}>?|=>|[–—→>])\s*(\d{1,2})\s*$/.exec(line);
+        if (match) return { oldRank: Number(match[1]), newRank: Number(match[2]) };
+    }
+    return null;
+}
+
+/** Первая ссылка на сообщение Discord в тексте — она и есть причина повышения. */
+export function parseMessageLink(content: string): string | null {
+    const match = /https?:\/\/(?:[\w-]+\.)?discord(?:app)?\.com\/channels\/(?:\d+|@me)\/\d+\/\d+/.exec(content);
+    return match ? match[0] : null;
+}
+
+/** Похоже ли сообщение на короткую заявку: упоминание плюс строка рангов. */
+export function isShortPromotion(message: MessageLike): boolean {
+    const content = message.content ?? "";
+    return findReportEmbed(message) === null
+        && parseShortRanks(content) !== null
+        && parseTargetUserId(content, "first") !== null;
+}
+
+/** Оба формата разом — по этому признаку показывается пункт меню. */
+export function looksLikePromotion(message: MessageLike): boolean {
+    return isPromotionReport(message) || isShortPromotion(message);
 }
 
 export function parseReport(message: MessageLike): ParseResult {
     const embed = findReportEmbed(message);
-    if (!embed) return { ok: false, issue: { code: "no-report-embed" } };
+    if (!embed) return parseShortReport(message);
 
     const nameField = findField(embed, FIELD_NAME_STATIC);
     if (!nameField) return { ok: false, issue: { code: "missing-name-field" } };
@@ -144,8 +193,42 @@ export function parseReport(message: MessageLike): ParseResult {
         report: {
             targetUserId: parseTargetUserId(message.content ?? ""),
             ...nameStatic,
-            ...ranks
+            ...ranks,
+            source: "embed"
         },
         warnings: validateRanks(ranks.oldRank, ranks.newRank, ranks.oldRankName, ranks.newRankName)
+    };
+}
+
+/**
+ * Короткая заявка. Имени и статика в ней нет — они остаются пустыми, а
+ * названий рангов нет вовсе, поэтому сверять с таблицей нечего: проверяются
+ * только номера.
+ */
+function parseShortReport(message: MessageLike): ParseResult {
+    const content = message.content ?? "";
+
+    const ranks = parseShortRanks(content);
+    if (!ranks) return { ok: false, issue: { code: "no-report-embed" } };
+
+    const targetUserId = parseTargetUserId(content, "first");
+    if (!targetUserId) return { ok: false, issue: { code: "no-user-mention" } };
+
+    const reportLink = parseMessageLink(content);
+    if (!reportLink) return { ok: false, issue: { code: "no-report-link" } };
+
+    return {
+        ok: true,
+        report: {
+            targetUserId,
+            name: "",
+            staticId: "",
+            oldRankName: "",
+            newRankName: "",
+            reportLink,
+            source: "short",
+            ...ranks
+        },
+        warnings: validateRanks(ranks.oldRank, ranks.newRank)
     };
 }

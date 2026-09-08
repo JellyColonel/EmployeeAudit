@@ -8,7 +8,7 @@ import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 import { LocaleStore } from "@webpack/common";
 
-import { DEFAULT_REPORT_CHANNEL_ID } from "./constants";
+import { DEFAULT_CHANNEL_IDS } from "./constants";
 import { type Lang, resolveLang, t } from "./i18n";
 import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
 
@@ -66,7 +66,7 @@ export const settings = definePluginSettings({
     channelIds: {
         type: OptionType.STRING,
         get description() { return t("channelIds", currentLang()); },
-        default: DEFAULT_REPORT_CHANNEL_ID,
+        default: DEFAULT_CHANNEL_IDS,
         get placeholder() { return t("channelIdsPlaceholder", currentLang()); }
     },
     action: {

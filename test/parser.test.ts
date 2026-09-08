@@ -11,7 +11,7 @@ import { test } from "node:test";
 
 import { isChannelAllowed, parseChannelList } from "../channels";
 import { formatIssue, resolveLang } from "../i18n";
-import { parseNameStatic, parseRanks, parseReport, parseTargetUserId } from "../parser";
+import { isPromotionReport, isShortPromotion, looksLikePromotion, parseMessageLink, parseNameStatic, parseRanks, parseReport, parseShortRanks, parseTargetUserId } from "../parser";
 import { validateRanks } from "../ranks";
 import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE, messageLink, renderAudit, usesPlaceholder } from "../template";
 
@@ -74,6 +74,85 @@ test("хендл остаётся доступным плейсхолдером 
         "/повышение пользователь:@arthur_belov был:5");
 });
 
+test("сквозной тест: короткая заявка → команда", () => {
+    const result = parseReport(report("05-short-form.json"));
+    assert.ok(result.ok, result.ok ? "" : formatIssue(result.issue, "ru"));
+
+    assert.equal(result.report.source, "short");
+    assert.equal(result.report.targetUserId, "100000000000000008");
+    assert.equal(result.report.oldRank, 3);
+    assert.equal(result.report.newRank, 4);
+    // Имени и статика в заявке нет — остаются пустыми
+    assert.equal(result.report.name, "");
+    assert.equal(result.report.staticId, "");
+
+    const audit = renderAudit(DEFAULT_COMMAND_TEMPLATE, {
+        ...PROMOTER,
+        targetId: result.report.targetUserId!,
+        targetUsername: TARGET_USERNAME,
+        targetName: result.report.name,
+        targetStatic: result.report.staticId,
+        oldRank: result.report.oldRank,
+        newRank: result.report.newRank,
+        // Причина берётся из самой заявки, а не строится по сообщению
+        reportLink: result.report.reportLink!
+    });
+
+    assert.equal(audit, expected("commands.txt", 4));
+});
+
+test("заявка: ранг вне таблицы предупреждает, но названия не сверяются", () => {
+    const result = parseReport(report("05-short-form.json"));
+    assert.ok(result.ok);
+
+    // Ранг 3 ниже среднего состава — одно предупреждение и никаких «mismatch»
+    assert.deepEqual(result.warnings, [{ code: "rank-out-of-table", rank: 3, name: "" }]);
+    assert.equal(formatIssue(result.warnings[0], "ru"), "Ранг 3 вне диапазона среднего состава (4–11)");
+});
+
+test("повышаемый в заявке — первое упоминание, роли в конце не в счёт", () => {
+    const content = "<@111> \n3-4\nhttps://discord.com/channels/1/2/3\n<@&444> <@&555>";
+    assert.equal(parseTargetUserId(content, "first"), "111");
+    // В отчёте бота порядок обратный: там повышаемый идёт последним
+    assert.equal(parseTargetUserId("<@&444> | <@111>"), "111");
+});
+
+test("ранги заявки: только отдельной строкой и разными разделителями", () => {
+    assert.deepEqual(parseShortRanks("<@1>\n3-4\nhttps://x"), { oldRank: 3, newRank: 4 });
+    assert.deepEqual(parseShortRanks("10 → 11"), { oldRank: 10, newRank: 11 });
+    assert.deepEqual(parseShortRanks("5 -> 6"), { oldRank: 5, newRank: 6 });
+
+    // Числа внутри фразы заявкой не считаются — иначе пункт лез бы в чужие сообщения
+    assert.equal(parseShortRanks("получилось с 3-4 попытки"), null);
+    assert.equal(parseShortRanks("<@1>\nбез рангов"), null);
+});
+
+test("ссылка-причина: первая ссылка на сообщение Discord", () => {
+    const content = "<@1>\n3-4\nhttps://discord.com/channels/10/20/30\nhttps://discord.com/channels/40/50/60";
+    assert.equal(parseMessageLink(content), "https://discord.com/channels/10/20/30");
+    assert.equal(parseMessageLink("https://canary.discord.com/channels/10/20/30"), "https://canary.discord.com/channels/10/20/30");
+
+    // Ссылка на канал, без сообщения — не причина
+    assert.equal(parseMessageLink("https://discord.com/channels/10/20"), null);
+});
+
+test("заявка без ссылки не собирается: причина осталась бы пустой", () => {
+    const result = parseReport({ content: "<@111>\n3-4", embeds: [] });
+    assert.ok(!result.ok);
+    assert.equal(result.issue.code, "no-report-link");
+});
+
+test("распознавание формата: отчёт, заявка и постороннее сообщение", () => {
+    const short = report("05-short-form.json");
+    const embed = report("01-ordinator-to-senior.json");
+
+    assert.ok(isShortPromotion(short) && !isPromotionReport(short));
+    assert.ok(isPromotionReport(embed) && !isShortPromotion(embed));
+    assert.ok(looksLikePromotion(short) && looksLikePromotion(embed));
+
+    assert.ok(!looksLikePromotion({ content: "привет <@111>", embeds: [] }));
+});
+
 test("ранг из нескольких слов с точками: Зам. зав. отделением [10]", () => {
     const result = parseReport(report("02-surgeon-to-deputy.json"));
     assert.ok(result.ok);
@@ -84,7 +163,8 @@ test("ранг из нескольких слов с точками: Зам. з�
         oldRank: 9,
         newRank: 10,
         oldRankName: "Хирург",
-        newRankName: "Зам. зав. отделением"
+        newRankName: "Зам. зав. отделением",
+        source: "embed"
     });
     assert.deepEqual(result.warnings, []);
 });

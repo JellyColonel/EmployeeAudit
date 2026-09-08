@@ -25,9 +25,12 @@ function normalizeRankName(name: string): string {
 /**
  * Сверяет разобранные ранги с таблицей СМП. Ничего не блокирует — возвращает
  * предупреждения, чтобы кривой отчёт был виден до отправки аудита.
+ *
+ * Названия рангов необязательны: в короткой заявке их не пишут, там есть только
+ * номера, и сверять тогда нечего.
  */
 export function validateRanks(
-    oldRank: number, newRank: number, oldRankName: string, newRankName: string
+    oldRank: number, newRank: number, oldRankName = "", newRankName = ""
 ): AuditIssue[] {
     const warnings: AuditIssue[] = [];
 
@@ -36,7 +39,7 @@ export function validateRanks(
         const expected = SMP_RANKS[rank];
         if (!expected) {
             warnings.push({ code: "rank-out-of-table", rank, name });
-        } else if (normalizeRankName(expected) !== normalizeRankName(name)) {
+        } else if (name && normalizeRankName(expected) !== normalizeRankName(name)) {
             warnings.push({ code: "rank-name-mismatch", rank, name, expected });
         }
     }
