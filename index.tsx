@@ -14,12 +14,12 @@ import type { ReactElement } from "react";
 
 import { isChannelAllowed } from "./channels";
 import { type AuditIssue, formatIssue, t, type UiKey } from "./i18n";
-import { isPromotionReport, MessageLike, parseReport } from "./parser";
+import { isPromotionReport, isShortPromotion, MessageLike, parseReport } from "./parser";
 import { currentLang, settings } from "./settings";
 import { AuditData, messageLink, renderAudit, usesPlaceholder } from "./template";
 
 type BuildResult =
-    | { ok: true; text: string; warnings: AuditIssue[]; }
+    | { ok: true; text: string; }
     | { ok: false; issue: AuditIssue; };
 
 /**
@@ -42,6 +42,11 @@ function buildAudit(message: Message, template: string): BuildResult {
         return { ok: false, issue: { code: "promoter-not-configured" } };
     }
 
+    // Имя и статик приходят только из embed-отчёта; в короткой заявке их нет.
+    if (usesPlaceholder(template, "targetName", "targetStatic") && !report.name) {
+        return { ok: false, issue: { code: "no-name-in-source" } };
+    }
+
     // Хендла в отчёте нет — он берётся из кеша Discord по упоминанию.
     const targetUsername = UserStore.getUser(report.targetUserId)?.username ?? "";
     if (!targetUsername && usesPlaceholder(template, "targetUsername")) {
@@ -60,10 +65,11 @@ function buildAudit(message: Message, template: string): BuildResult {
         targetStatic: report.staticId,
         oldRank: report.oldRank,
         newRank: report.newRank,
-        reportLink: messageLink(guildId, message.channel_id, message.id)
+        // У заявки причина написана в ней самой, у отчёта ею служит сам отчёт.
+        reportLink: report.reportLink ?? messageLink(guildId, message.channel_id, message.id)
     };
 
-    return { ok: true, text: renderAudit(template, data), warnings: result.warnings };
+    return { ok: true, text: renderAudit(template, data) };
 }
 
 async function handleClick(message: Message, template: string, toasts: { copied: UiKey; inserted: UiKey; }) {
@@ -82,21 +88,24 @@ async function handleClick(message: Message, template: string, toasts: { copied:
 
     if (shouldCopy) await copyWithToast(built.text, t(toasts.copied, lang));
     else if (shouldInsert) showToast(t(toasts.inserted, lang), Toasts.Type.SUCCESS);
-
-    // Предупреждения не мешают работе: аудит уже собран, но отчёт выглядит странно.
-    for (const warning of built.warnings) showToast(`⚠️ ${formatIssue(warning, lang)}`, Toasts.Type.MESSAGE);
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
     if (!message) return;
     if (!isChannelAllowed(message.channel_id, settings.store.channelIds)) return;
-    if (!isPromotionReport(message as unknown as MessageLike)) return;
+    const source = message as unknown as MessageLike;
+    const isReport = isPromotionReport(source);
+    if (!isReport && !isShortPromotion(source)) return;
 
     const { showAuditItem, showCommandItem, template, commandTemplate } = settings.store;
     const lang = currentLang();
     const items: ReactElement<any>[] = [];
 
-    if (showAuditItem) {
+    // Из короткой заявки текстовый аудит собрать нечем, пока шаблон просит имя и
+    // статик, — тогда пункт не показывается вовсе, а не падает по клику.
+    const auditPossible = isReport || !usesPlaceholder(template, "targetName", "targetStatic");
+
+    if (showAuditItem && auditPossible) {
         items.push(
             <Menu.MenuItem
                 id="vc-employee-audit"

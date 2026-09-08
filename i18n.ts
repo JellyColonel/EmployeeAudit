@@ -19,9 +19,8 @@ export type AuditIssue =
     | { code: "no-user-mention"; }
     | { code: "promoter-not-configured"; }
     | { code: "unknown-username"; }
-    | { code: "rank-out-of-table"; rank: number; name: string; }
-    | { code: "rank-name-mismatch"; rank: number; name: string; expected: string; }
-    | { code: "rank-jump"; from: number; to: number; };
+    | { code: "no-report-link"; }
+    | { code: "no-name-in-source"; };
 
 const UI = {
     en: {
@@ -90,7 +89,7 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
     en: issue => {
         switch (issue.code) {
             case "no-report-embed":
-                return "This message has no promotion report embed";
+                return "This message is neither a promotion report nor a promotion request";
             case "missing-name-field":
                 return "Report is missing the «Имя Фамилия | Static ID» field";
             case "unparsable-name":
@@ -105,18 +104,16 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Fill in your name and Static ID in the plugin settings first";
             case "unknown-username":
                 return "Discord has no handle cached for the promoted user — open their profile and try again";
-            case "rank-out-of-table":
-                return `Rank ${issue.rank} («${issue.name}») is outside the mid-level range (4–11)`;
-            case "rank-name-mismatch":
-                return `Rank ${issue.rank} is «${issue.name}» in the report, but «${issue.expected}» in the rank table`;
-            case "rank-jump":
-                return `Promotion is not by a single rank: ${issue.from} → ${issue.to}`;
+            case "no-report-link":
+                return "The request has no report link — «Причина повышения» would be empty";
+            case "no-name-in-source":
+                return "This request has no name or Static ID: they only come from the bot's report embed";
         }
     },
     ru: issue => {
         switch (issue.code) {
             case "no-report-embed":
-                return "В сообщении нет embed'а отчёта на повышение";
+                return "Сообщение не похоже ни на отчёт на повышение, ни на заявку";
             case "missing-name-field":
                 return "В отчёте нет поля «Имя Фамилия | Static ID»";
             case "unparsable-name":
@@ -131,12 +128,10 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Сначала заполните своё имя и Static ID в настройках плагина";
             case "unknown-username":
                 return "Discord не знает никнейм повышаемого — откройте его профиль и повторите";
-            case "rank-out-of-table":
-                return `Ранг ${issue.rank} («${issue.name}») вне диапазона среднего состава (4–11)`;
-            case "rank-name-mismatch":
-                return `Ранг ${issue.rank} в отчёте назван «${issue.name}», в таблице рангов — «${issue.expected}»`;
-            case "rank-jump":
-                return `Повышение не на один ранг: ${issue.from} → ${issue.to}`;
+            case "no-report-link":
+                return "В заявке нет ссылки на отчёт — «Причина повышения» осталась бы пустой";
+            case "no-name-in-source":
+                return "В заявке нет имени и статика: они берутся только из embed'а отчёта";
         }
     }
 };
