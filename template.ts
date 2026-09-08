@@ -45,15 +45,46 @@ export const DEFAULT_TEMPLATE = [
 export const DEFAULT_COMMAND_TEMPLATE =
     "/повышение пользователь:<@{targetId}> был:{oldRank} стал:{newRank} причина:{reportLink}";
 
+/** Данные увольнения для подстановки в шаблон команды. */
+export interface DismissalData {
+    targetId: string;
+    targetName: string;
+    targetStatic: string;
+    /** Отдел из ника заявителя — тот, что будет заменён на «Гр.». */
+    department: string;
+    rank: number | string;
+    /** Причина, которую человек написал в заявлении. */
+    reason: string;
+    /** Ссылка на само заявление — она и идёт в аргумент «причина». */
+    reportLink: string;
+    inventoryLink: string;
+}
+
+/**
+ * Вызов команды бота, оформляющего увольнение. Ранг здесь один — тот, что был
+ * на момент увольнения; «причина» у бота означает ссылку на заявление, а не
+ * текст, который написал сам увольняющийся.
+ */
+export const DEFAULT_DISMISSAL_COMMAND_TEMPLATE =
+    "/увольнение пользователь:<@{targetId}> ранг:{rank} причина:{reportLink}";
+
 /** Ссылка на сообщение-отчёт, идущая в строку «Причина повышения». */
 export function messageLink(guildId: string | null | undefined, channelId: string, messageId: string): string {
     return `https://discord.com/channels/${guildId ?? "@me"}/${channelId}/${messageId}`;
 }
 
 /** Подстановка `{ключ}` из данных; неизвестные плейсхолдеры остаются как есть. */
-export function renderAudit(template: string, data: AuditData): string {
+export function renderTemplate(template: string, data: Record<string, string | number>): string {
     return template.replace(/\{(\w+)\}/g, (whole, key: string) =>
-        key in data ? String(data[key as keyof AuditData]) : whole);
+        key in data ? String(data[key]) : whole);
+}
+
+export function renderAudit(template: string, data: AuditData): string {
+    return renderTemplate(template, data as unknown as Record<string, string | number>);
+}
+
+export function renderDismissal(template: string, data: DismissalData): string {
+    return renderTemplate(template, data as unknown as Record<string, string | number>);
 }
 
 /** Использует ли шаблон хоть один из перечисленных плейсхолдеров. */

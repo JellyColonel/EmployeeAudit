@@ -8,6 +8,7 @@ import { copyToClipboard } from "@utils/clipboard";
 import { sendMessage } from "@utils/discord";
 import { RestAPI } from "@webpack/common";
 
+import { type DismissalPlan } from "./dismissalPlan";
 import { type PromotionPlan } from "./plan";
 
 /**
@@ -33,6 +34,32 @@ export function removeRole(guildId: string, userId: string, roleId: string): Pro
  */
 export function setNickname(guildId: string, userId: string, nick: string): Promise<unknown> {
     return RestAPI.patch({ url: memberUrl(guildId, userId), body: { nick } });
+}
+
+/**
+ * Полная замена набора ролей — так увольнение снимает всё разом. Здесь замена
+ * массива уместна, в отличие от повышения: цель — «остаться при одной роли», и
+ * промежуточного состояния без отдела, но ещё не гражданином, не возникает.
+ */
+export function setRoles(guildId: string, userId: string, roles: string[]): Promise<unknown> {
+    return RestAPI.patch({ url: memberUrl(guildId, userId), body: { roles } });
+}
+
+/**
+ * Участник сервера или `null`, если он оттуда вышел.
+ *
+ * Кеш Discord знает не всех: на больших серверах участники подгружаются лениво,
+ * поэтому пустой `GuildMemberStore` ещё не значит «вышел». Отличить одно от
+ * другого умеет только сервер — 404 и есть ответ «его тут нет».
+ */
+export async function fetchMember(guildId: string, userId: string): Promise<{ roles: string[]; nick: string | null; } | null> {
+    try {
+        const { body } = await RestAPI.get({ url: memberUrl(guildId, userId) });
+        return { roles: body.roles ?? [], nick: body.nick ?? null };
+    } catch (error: any) {
+        if (error?.status === 404) return null;
+        throw error;
+    }
 }
 
 /** Реакция от своего имени; `emoji` — либо unicode, либо `имя:id` для серверной. */
@@ -109,8 +136,44 @@ export async function executePlan(plan: PromotionPlan, target: ExecutionTarget):
 }
 
 /** Какой шаг плана шёл следующим после уже выполненных — на нём и упало. */
-function nextStep(plan: PromotionPlan, done: PromotionStep[]): PromotionStep {
+function nextStep(plan: PromotionPlan | DismissalPlan, done: PromotionStep[]): PromotionStep {
     const order: PromotionStep[] = ["roles", "nickname", "audit", "reaction", "command"];
-    const planned = order.filter(step => plan[step] != null);
+    const planned = order.filter(step => (plan as any)[step] != null);
     return planned.find(step => !done.includes(step)) ?? "roles";
+}
+
+/**
+ * Увольнение: та же последовательность и та же остановка на первой ошибке, но
+ * роли меняются одним запросом, а публикации аудита нет — его оформляет бот по
+ * команде, которая кладётся в буфер последней.
+ */
+export async function executeDismissalPlan(plan: DismissalPlan, target: ExecutionTarget): Promise<ExecutionResult> {
+    const done: PromotionStep[] = [];
+    const { guildId, userId, channelId, messageId } = target;
+
+    try {
+        if (plan.roles) {
+            await setRoles(guildId, userId, plan.roles.next);
+            done.push("roles");
+        }
+
+        if (plan.nickname) {
+            await setNickname(guildId, userId, plan.nickname.to);
+            done.push("nickname");
+        }
+
+        if (plan.reaction) {
+            await addReaction(channelId, messageId, plan.reaction);
+            done.push("reaction");
+        }
+
+        if (plan.command) {
+            await copyToClipboard(plan.command);
+            done.push("command");
+        }
+    } catch (error) {
+        return { done, failed: nextStep(plan, done), error };
+    }
+
+    return { done };
 }

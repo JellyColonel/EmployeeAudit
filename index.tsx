@@ -5,7 +5,7 @@
  */
 
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
-import { CopyIcon, NotesIcon, TopRightArrow } from "@components/Icons";
+import { CopyIcon, NoEntrySignIcon, NotesIcon, TopRightArrow } from "@components/Icons";
 import { copyWithToast, insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
@@ -13,11 +13,13 @@ import { ChannelStore, Menu, showToast, Toasts, UserStore } from "@webpack/commo
 import type { ReactElement } from "react";
 
 import { isChannelAllowed } from "./channels";
+import { runDismissal } from "./dismiss";
+import { isDismissalRequest, parseDismissal } from "./dismissal";
 import { type AuditIssue, formatIssue, type Lang, t, type UiKey } from "./i18n";
 import { isPromotionReport, isShortPromotion, MessageLike, type ParsedReport, parseReport } from "./parser";
 import { runPromotion } from "./promote";
 import { currentLang, settings } from "./settings";
-import { AuditData, messageLink, renderAudit, usesPlaceholder } from "./template";
+import { AuditData, type DismissalData, messageLink, renderAudit, renderDismissal, usesPlaceholder } from "./template";
 
 type BuildResult =
     | { ok: true; text: string; }
@@ -130,14 +132,48 @@ async function handlePromote(message: Message) {
     await runPromotion({ message, report, ...texts, lang });
 }
 
+/**
+ * Увольнение: разбор заявления и вызов общего цикла. Текстового аудита здесь
+ * нет — его оформляет бот по команде, поэтому собирается только она.
+ */
+async function handleDismiss(message: Message) {
+    const lang = currentLang();
+    const parsed = parseDismissal(message as unknown as MessageLike);
+    if (!parsed.ok) {
+        showToast(formatIssue(parsed.issue, lang), Toasts.Type.FAILURE);
+        return;
+    }
+
+    const { dismissal } = parsed;
+    const guildId = ChannelStore.getChannel(message.channel_id)?.guild_id;
+    const data: DismissalData = {
+        targetId: dismissal.targetUserId,
+        targetName: dismissal.name,
+        targetStatic: dismissal.staticId,
+        department: dismissal.department,
+        rank: dismissal.rank,
+        reason: dismissal.reason,
+        // Причиной для бота служит ссылка на само заявление, а не текст из него
+        reportLink: messageLink(guildId, message.channel_id, message.id),
+        inventoryLink: dismissal.inventoryLink
+    };
+
+    const commandText = settings.store.stepDismissalCommand
+        ? renderDismissal(settings.store.dismissalCommandTemplate, data)
+        : "";
+
+    await runDismissal({ message, dismissal, commandText, lang });
+}
+
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
     if (!message) return;
     if (!isChannelAllowed(message.channel_id, settings.store.channelIds)) return;
     const source = message as unknown as MessageLike;
     const isReport = isPromotionReport(source);
-    if (!isReport && !isShortPromotion(source)) return;
+    const isDismissal = isDismissalRequest(source);
+    if (!isReport && !isShortPromotion(source) && !isDismissal) return;
 
-    const { showAuditItem, showCommandItem, showPromoteItem, template, commandTemplate } = settings.store;
+    const { showAuditItem, showCommandItem, showPromoteItem, showDismissItem, template, commandTemplate } = settings.store;
     const lang = currentLang();
     const items: ReactElement<any>[] = [];
 
@@ -145,7 +181,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
     // статик, — тогда пункт не показывается вовсе, а не падает по клику.
     const auditPossible = isReport || !usesPlaceholder(template, "targetName", "targetStatic");
 
-    if (showAuditItem && auditPossible) {
+    if (showAuditItem && auditPossible && !isDismissal) {
         items.push(
             <Menu.MenuItem
                 id="vc-employee-audit"
@@ -157,7 +193,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
         );
     }
 
-    if (showCommandItem) {
+    if (showCommandItem && !isDismissal) {
         items.push(
             <Menu.MenuItem
                 id="vc-employee-audit-command"
@@ -172,7 +208,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
     // Пункт остаётся видимым, даже если аудит из этого сообщения не собрать:
     // роли, ник и галочка от имени и статика не зависят, а публикацию аудита
     // можно выключить отдельным шагом.
-    if (showPromoteItem) {
+    if (showPromoteItem && !isDismissal) {
         items.push(
             <Menu.MenuItem
                 id="vc-employee-audit-promote"
@@ -181,6 +217,19 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
                 icon={TopRightArrow}
                 leadingAccessory={{ type: "icon", icon: TopRightArrow }}
                 action={() => handlePromote(message)}
+            />
+        );
+    }
+
+    if (showDismissItem && isDismissal) {
+        items.push(
+            <Menu.MenuItem
+                id="vc-employee-audit-dismiss"
+                label={t("menuLabelDismiss", lang)}
+                color="danger"
+                icon={NoEntrySignIcon}
+                leadingAccessory={{ type: "icon", icon: NoEntrySignIcon }}
+                action={() => handleDismiss(message)}
             />
         );
     }

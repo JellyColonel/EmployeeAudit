@@ -10,7 +10,7 @@ import { test } from "node:test";
 // Сам факт успешного импорта «../settings» — половина проверки: сломанная версия
 // падала именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
 import { parseChannelList } from "../channels";
-import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
+import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_CITIZEN_ROLE_ID, DEFAULT_DEPARTMENT, DEFAULT_DISMISSAL_CHANNEL_ID, DEFAULT_DISMISSAL_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
 import { DEFAULT_ROLE_THRESHOLD } from "../plan";
 import { currentLang, settings } from "../settings";
 import { DEFAULT_COMMAND_TEMPLATE } from "../template";
@@ -20,13 +20,16 @@ const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "chann
     "showAuditItem", "showCommandItem", "template", "commandTemplate",
     "showPromoteItem", "stepRoles", "stepNickname", "stepAudit", "stepReaction",
     "roleThreshold", "rolesToAdd", "rolesToRemove", "department", "auditChannelId", "reactionEmoji",
-    "stepCopyCommand"] as const;
+    "stepCopyCommand", "showDismissItem", "stepDismissalRoles", "stepDismissalNickname",
+    "stepDismissalReaction", "stepDismissalCommand", "citizenRoleId", "dismissalDepartment",
+    "dismissalCommandTemplate"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
-    // Оба канала: отчёты бота и заявки, написанные руками
+    // Три канала: отчёты бота, заявки руками и заявления на увольнение
     assert.equal(settings.store.channelIds, DEFAULT_CHANNEL_IDS);
-    assert.deepEqual(parseChannelList(DEFAULT_CHANNEL_IDS), [DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID]);
+    assert.deepEqual(parseChannelList(DEFAULT_CHANNEL_IDS),
+        [DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID, DEFAULT_DISMISSAL_CHANNEL_ID]);
 
     // Личные данные не зашиты в дефолты: каждый заполняет свои
     assert.equal(settings.store.promoterName, "");
@@ -57,6 +60,11 @@ test("повышение выключено по умолчанию, а его �
     assert.equal(settings.store.roleThreshold, DEFAULT_ROLE_THRESHOLD);
     assert.equal(settings.store.department, DEFAULT_DEPARTMENT);
     assert.equal(settings.store.reactionEmoji, DEFAULT_REACTION_EMOJI);
+
+    // Увольнение тоже включается вручную: оно снимает все роли
+    assert.equal(settings.store.showDismissItem, false);
+    assert.equal(settings.store.citizenRoleId, DEFAULT_CITIZEN_ROLE_ID);
+    assert.equal(settings.store.dismissalDepartment, DEFAULT_DISMISSAL_DEPARTMENT);
 
     // Канал аудита один на фракцию, как и каналы отчётов
     assert.equal(settings.store.auditChannelId, DEFAULT_AUDIT_CHANNEL_ID);

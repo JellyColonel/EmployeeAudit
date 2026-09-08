@@ -5,27 +5,10 @@
  */
 
 import { FIELD_NAME_STATIC, FIELD_RANKS, REPORT_TITLE } from "./constants";
+import { type EmbedLike, fieldValue, findField, type MessageLike, normalize, stripMarkdown } from "./embed";
 import { type AuditIssue } from "./i18n";
 
-/** Минимальные формы объектов Discord, которые нужны парсеру. */
-export interface EmbedFieldLike {
-    rawName?: string;
-    rawValue?: string;
-    name?: string;
-    value?: string;
-}
-
-export interface EmbedLike {
-    type?: string;
-    rawTitle?: string;
-    title?: string;
-    fields?: EmbedFieldLike[];
-}
-
-export interface MessageLike {
-    content?: string;
-    embeds?: EmbedLike[];
-}
+export type { EmbedFieldLike, EmbedLike, MessageLike } from "./embed";
 
 /**
  * Откуда взяты данные. `embed` — отчёт бота «Ева Повышаловна»; `short` — заявка,
@@ -56,24 +39,6 @@ export type ParseResult =
     | { ok: true; report: ParsedReport; }
     | { ok: false; issue: AuditIssue; };
 
-/** Приводит строку к виду, пригодному для сравнения: нижний регистр, «ё» → «е». */
-function normalize(text: string): string {
-    return text.toLowerCase().replace(/ё/g, "е").replace(/\s+/g, " ").trim();
-}
-
-/** Убирает markdown-обёртки, которыми бот выделяет значения (`**301**`). */
-function stripMarkdown(text: string): string {
-    return text.replace(/\*\*/g, "").replace(/^\s*[`*_~]+|[`*_~]+\s*$/g, "").trim();
-}
-
-function fieldName(field: EmbedFieldLike): string {
-    return field.rawName ?? field.name ?? "";
-}
-
-function fieldValue(field: EmbedFieldLike): string {
-    return field.rawValue ?? field.value ?? "";
-}
-
 /** Находит в сообщении embed отчёта на повышение. */
 export function findReportEmbed(message: MessageLike): EmbedLike | null {
     const wanted = normalize(REPORT_TITLE);
@@ -82,10 +47,6 @@ export function findReportEmbed(message: MessageLike): EmbedLike | null {
 
 export function isPromotionReport(message: MessageLike): boolean {
     return findReportEmbed(message) !== null;
-}
-
-function findField(embed: EmbedLike, pattern: RegExp): EmbedFieldLike | null {
-    return embed.fields?.find(f => pattern.test(normalize(fieldName(f)))) ?? null;
 }
 
 /** `Артур Белов | 10001` → имя и статик. Разделителем считается последний `|`. */
