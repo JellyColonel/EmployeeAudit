@@ -53,12 +53,14 @@ foreach ($file in $Files) {
 }
 
 $discord = Get-Process -Name Discord -ErrorAction SilentlyContinue
+$restartDiscord = $false
 if ($discord) {
     Write-Host "Discord запущен, его нужно полностью закрыть." -ForegroundColor Yellow
-    $answer = Read-Host "Закрыть Discord сейчас? (д/н)"
+    $answer = Read-Host "Закрыть Discord сейчас и запустить обратно после установки? (д/н)"
     if ($answer -match "^[дdyaуДDY]") {
         $discord | Stop-Process -Force
         Start-Sleep -Seconds 3
+        $restartDiscord = $true
         Write-Host "Discord закрыт."
     } else {
         Fail "Закройте Discord сами и запустите установку снова."
@@ -74,14 +76,34 @@ foreach ($file in $Files) {
 }
 Write-Host "Файлы скопированы."
 
+# Лаунчер Squirrel, а не app-*\Discord.exe: он сам находит текущую версию и
+# переживает обновления Discord, которые эту папку переименовывают.
+$launched = $false
+if ($restartDiscord) {
+    $launcher = Join-Path $env:LOCALAPPDATA "Discord\Update.exe"
+    if (Test-Path $launcher) {
+        Start-Process -FilePath $launcher -ArgumentList "--processStart", "Discord.exe"
+        $launched = $true
+        Write-Host "Discord запущен обратно."
+    } else {
+        Write-Host "Не нашёл, чем запустить Discord — запустите его сами." -ForegroundColor Yellow
+    }
+}
+
 Write-Host ""
 Write-Host "Готово." -ForegroundColor Green
 Write-Host ""
 Write-Host "Что дальше:"
-Write-Host "  1. Запустите Discord."
-Write-Host "  2. Настройки -> Vencord -> Plugins -> включите EmployeeAudit."
-Write-Host "  3. В настройках плагина заполните своё имя и Static ID."
-Write-Host "     Без них аудит не соберётся."
+if ($launched) {
+    Write-Host "  1. Настройки -> Vencord -> Plugins -> включите EmployeeAudit."
+    Write-Host "  2. В настройках плагина заполните своё имя и Static ID."
+    Write-Host "     Без них аудит не соберётся."
+} else {
+    Write-Host "  1. Запустите Discord."
+    Write-Host "  2. Настройки -> Vencord -> Plugins -> включите EmployeeAudit."
+    Write-Host "  3. В настройках плагина заполните своё имя и Static ID."
+    Write-Host "     Без них аудит не соберётся."
+}
 Write-Host ""
 Write-Host "Правый клик по отчёту на повышение -> Скопировать кадровый аудит."
 Write-Host ""

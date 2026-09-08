@@ -14,6 +14,20 @@ VENCORD_REPO="${VENCORD_REPO:-$HOME/projects/Vencord}"
 WIN_USER="${WIN_USER:-Valeriu}"
 TARGET="${TARGET:-/mnt/c/Users/$WIN_USER/AppData/Roaming/Vencord/dist}"
 
+# Discord закрывается перед копированием и открывается после: patcher.js читается
+# один раз при старте, поэтому без перезапуска подложенная сборка не подхватится,
+# а Ctrl+R не помогает. RESTART_DISCORD=0 оставляет прежнее поведение — только
+# скопировать и напечатать, что делать руками.
+RESTART_DISCORD="${RESTART_DISCORD:-1}"
+
+# Лаунчер Squirrel, а не app-*/Discord.exe: он сам находит текущую версию и
+# переживает обновления Discord, которые эту папку переименовывают.
+DISCORD_LAUNCHER="${DISCORD_LAUNCHER:-/mnt/c/Users/$WIN_USER/AppData/Local/Discord/Update.exe}"
+
+discord_running() {
+    tasklist.exe /FI "IMAGENAME eq Discord.exe" 2>/dev/null | grep -q "Discord.exe"
+}
+
 [ -d "$VENCORD_REPO" ] || { echo "Нет репозитория Vencord: $VENCORD_REPO" >&2; exit 1; }
 [ -d "$TARGET" ] || { echo "Нет папки Vencord на Windows: $TARGET" >&2; exit 1; }
 
@@ -34,6 +48,23 @@ echo "==> Сборка в $VENCORD_REPO ($BUILD_FLAGS)"
 cd "$VENCORD_REPO"
 corepack pnpm build $BUILD_FLAGS
 
+# Собираем до того, как трогать Discord: падение сборки не должно закрывать
+# работающий клиент.
+was_running=0
+if [ "$RESTART_DISCORD" = "1" ] && command -v tasklist.exe >/dev/null 2>&1; then
+    if discord_running; then
+        was_running=1
+        echo "==> Закрываю Discord"
+        taskkill.exe /F /IM Discord.exe >/dev/null 2>&1 || true
+
+        # Процессы умирают не мгновенно, а копировать в занятые файлы нельзя
+        for _ in $(seq 10); do
+            discord_running || break
+            sleep 1
+        done
+    fi
+fi
+
 BACKUP="$TARGET.bak-$(date +%Y%m%d-%H%M%S)"
 echo "==> Резервная копия: $BACKUP"
 cp -r "$TARGET" "$BACKUP"
@@ -49,9 +80,21 @@ for f in patcher.js patcher.js.map patcher.js.LEGAL.txt \
 done
 
 echo
-echo "Готово. Теперь на Windows:"
-echo "  1. Полностью закрыть Discord (трей → Quit, не просто крестик)"
-echo "  2. Запустить заново"
-echo "  3. Настройки → Vencord → Plugins → включить EmployeeAudit"
+if [ "$was_running" = "1" ]; then
+    if [ -x "$DISCORD_LAUNCHER" ]; then
+        echo "==> Запускаю Discord"
+        "$DISCORD_LAUNCHER" --processStart Discord.exe >/dev/null 2>&1 || \
+            echo "Не удалось запустить Discord, запустите сами"
+    else
+        echo "Лаунчер не найден ($DISCORD_LAUNCHER) — запустите Discord сами"
+    fi
+    echo
+    echo "Готово. Плагин включается в Настройки → Vencord → Plugins."
+else
+    echo "Готово. Теперь на Windows:"
+    echo "  1. Полностью закрыть Discord (трей → Quit, не просто крестик)"
+    echo "  2. Запустить заново"
+    echo "  3. Настройки → Vencord → Plugins → включить EmployeeAudit"
+fi
 echo
 echo "Откатиться: cp -f $BACKUP/* $TARGET/"
