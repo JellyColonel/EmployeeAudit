@@ -59,9 +59,9 @@ gh release create "$TAG" "$ZIP" \
 ## Установка
 
 1. Скачать \`$(basename "$ZIP")\`, распаковать.
-2. Полностью закрыть Discord: трей → Quit.
-3. Запустить \`install.bat\`.
-4. В Discord включить плагин: Настройки → Vencord → Plugins → EmployeeAudit,
+2. Запустить \`install.bat\`. Если Discord открыт, установщик спросит разрешения
+   закрыть его и после установки запустит обратно сам.
+3. В Discord включить плагин: Настройки → Vencord → Plugins → EmployeeAudit,
    затем вписать в его настройках своё имя и Static ID.
 
 Обновляться потом — \`update.bat\`, он скачивает последний релиз сам.
