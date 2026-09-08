@@ -20,7 +20,18 @@ export type AuditIssue =
     | { code: "promoter-not-configured"; }
     | { code: "unknown-username"; }
     | { code: "no-report-link"; }
-    | { code: "no-name-in-source"; };
+    | { code: "no-name-in-source"; }
+    | { code: "no-guild"; }
+    | { code: "no-manage-roles"; }
+    | { code: "no-manage-nicknames"; }
+    | { code: "roles-not-configured"; }
+    | { code: "department-not-set"; }
+    | { code: "no-current-nick"; }
+    | { code: "unparsable-nick"; value: string; }
+    | { code: "nickname-too-long"; value: string; }
+    | { code: "audit-channel-not-set"; }
+    | { code: "reaction-not-set"; }
+    | { code: "nothing-to-do"; };
 
 const UI = {
     en: {
@@ -46,7 +57,39 @@ const UI = {
         commandTemplate: "Bot command template. Same placeholders; the command's user argument is filled from the <@{targetId}> mention",
         showAuditItem: "Show the «Copy Employee Audit» menu item",
         showCommandItem: "Show the «Copy Promotion Command» menu item",
-        language: "Interface language of this plugin"
+        language: "Interface language of this plugin",
+
+        menuLabelPromote: "Carry Out Promotion",
+        showPromoteItem: "Show the «Carry Out Promotion» menu item. It changes roles and nickname, posts the audit and reacts to the message — everything at once",
+        stepRoles: "Promotion step: change Discord roles",
+        stepNickname: "Promotion step: change the server nickname",
+        stepAudit: "Promotion step: post the audit text",
+        stepReaction: "Promotion step: react to the report message",
+        roleThreshold: "Rank at which the middle staff starts. Roles and the department in the nickname change only when a promotion crosses this line (3 → 4)",
+        rolesToAdd: "Role IDs granted when crossing into the middle staff, comma-separated",
+        rolesToRemove: "Role IDs taken away when crossing into the middle staff, comma-separated",
+        department: "Department for the nickname — the first segment of «Отдел | Имя Фамилия | Static ID»",
+        auditChannelId: "ID of the channel the audit text is posted to",
+        reactionEmoji: "Emoji marking a handled message. A server emoji is written as name:id",
+
+        confirmTitle: "Carry out the promotion?",
+        confirmButton: "Carry out",
+        cancelButton: "Cancel",
+        summaryTarget: "Employee",
+        summaryRanks: "Ranks",
+        summaryRolesAdd: "Grant roles",
+        summaryRolesRemove: "Take away roles",
+        summaryNickname: "Nickname",
+        summaryAudit: "Post the audit to",
+        summaryReaction: "React with",
+
+        stepNameRoles: "roles",
+        stepNameNickname: "nickname",
+        stepNameAudit: "audit",
+        stepNameReaction: "checkmark",
+        promotionDone: "Promotion carried out",
+        promotionFailedAt: "Failed at step",
+        promotionCompleted: "Completed"
     },
     ru: {
         pluginDescription: "Собирает текст кадрового аудита из отчёта на повышение (фракция «Больница», Russia Online)",
@@ -71,7 +114,39 @@ const UI = {
         commandTemplate: "Шаблон команды бота. Плейсхолдеры те же; аргумент «пользователь» заполняется из упоминания <@{targetId}>",
         showAuditItem: "Показывать пункт «Скопировать кадровый аудит»",
         showCommandItem: "Показывать пункт «Скопировать команду повышения»",
-        language: "Язык интерфейса плагина"
+        language: "Язык интерфейса плагина",
+
+        menuLabelPromote: "Провести повышение",
+        showPromoteItem: "Показывать пункт «Провести повышение». Он меняет роли и ник, публикует аудит и ставит реакцию — всё сразу",
+        stepRoles: "Шаг повышения: менять роли Discord",
+        stepNickname: "Шаг повышения: менять никнейм на сервере",
+        stepAudit: "Шаг повышения: публиковать текст аудита",
+        stepReaction: "Шаг повышения: ставить реакцию на сообщение-отчёт",
+        roleThreshold: "Ранг, с которого начинается средний состав. Роли и отдел в нике меняются, только если повышение пересекает эту границу (3 → 4)",
+        rolesToAdd: "ID ролей, которые выдаются при переходе в средний состав (через запятую)",
+        rolesToRemove: "ID ролей, которые снимаются при переходе в средний состав (через запятую)",
+        department: "Отдел для никнейма — первый сегмент «Отдел | Имя Фамилия | Static ID»",
+        auditChannelId: "ID канала, куда публикуется текст аудита",
+        reactionEmoji: "Эмодзи, которым отмечается обработанное сообщение. Серверная пишется как имя:id",
+
+        confirmTitle: "Провести повышение?",
+        confirmButton: "Провести",
+        cancelButton: "Отмена",
+        summaryTarget: "Сотрудник",
+        summaryRanks: "Ранги",
+        summaryRolesAdd: "Выдать роли",
+        summaryRolesRemove: "Снять роли",
+        summaryNickname: "Никнейм",
+        summaryAudit: "Аудит в канал",
+        summaryReaction: "Реакция",
+
+        stepNameRoles: "роли",
+        stepNameNickname: "ник",
+        stepNameAudit: "аудит",
+        stepNameReaction: "галочка",
+        promotionDone: "Повышение проведено",
+        promotionFailedAt: "Ошибка на шаге",
+        promotionCompleted: "Выполнено"
     }
 } satisfies Record<Lang, Record<string, string>>;
 
@@ -108,6 +183,28 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "The request has no report link — «Причина повышения» would be empty";
             case "no-name-in-source":
                 return "This request has no name or Static ID: they only come from the bot's report embed";
+            case "no-guild":
+                return "This message is not in a server, so there is nobody to change roles for";
+            case "no-manage-roles":
+                return "You have no «Manage Roles» permission in this server";
+            case "no-manage-nicknames":
+                return "You have no «Manage Nicknames» permission in this server";
+            case "roles-not-configured":
+                return "Fill in the roles to grant and to take away in the plugin settings first";
+            case "department-not-set":
+                return "Fill in the department for the nickname in the plugin settings first";
+            case "no-current-nick":
+                return "The employee has no server nickname — there is no «Отдел» to replace";
+            case "unparsable-nick":
+                return `Nickname «${issue.value}» is not in the «Отдел | Имя Фамилия | Static ID» format`;
+            case "nickname-too-long":
+                return `The new nickname is longer than 32 characters: «${issue.value}»`;
+            case "audit-channel-not-set":
+                return "Fill in the audit channel ID in the plugin settings first";
+            case "reaction-not-set":
+                return "Fill in the checkmark emoji in the plugin settings first";
+            case "nothing-to-do":
+                return "Every promotion step is turned off — there is nothing to do";
         }
     },
     ru: issue => {
@@ -132,6 +229,28 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "В заявке нет ссылки на отчёт — «Причина повышения» осталась бы пустой";
             case "no-name-in-source":
                 return "В заявке нет имени и статика: они берутся только из embed'а отчёта";
+            case "no-guild":
+                return "Сообщение не на сервере — некому менять роли";
+            case "no-manage-roles":
+                return "На этом сервере у вас нет права «Управлять ролями»";
+            case "no-manage-nicknames":
+                return "На этом сервере у вас нет права «Управлять никнеймами»";
+            case "roles-not-configured":
+                return "Сначала укажите в настройках плагина, какие роли выдавать и снимать";
+            case "department-not-set":
+                return "Сначала укажите в настройках плагина отдел для никнейма";
+            case "no-current-nick":
+                return "У сотрудника нет ника на сервере — нечему менять отдел";
+            case "unparsable-nick":
+                return `Ник «${issue.value}» не в формате «Отдел | Имя Фамилия | Static ID»`;
+            case "nickname-too-long":
+                return `Новый ник длиннее 32 символов: «${issue.value}»`;
+            case "audit-channel-not-set":
+                return "Сначала укажите в настройках плагина ID канала для аудита";
+            case "reaction-not-set":
+                return "Сначала укажите в настройках плагина эмодзи для отметки";
+            case "nothing-to-do":
+                return "Все шаги повышения выключены — делать нечего";
         }
     }
 };

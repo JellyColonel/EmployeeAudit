@@ -8,8 +8,9 @@ import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 import { LocaleStore } from "@webpack/common";
 
-import { DEFAULT_CHANNEL_IDS } from "./constants";
+import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_ROLES_TO_ADD, DEFAULT_ROLES_TO_REMOVE } from "./constants";
 import { type Lang, resolveLang, t } from "./i18n";
+import { DEFAULT_ROLE_THRESHOLD } from "./plan";
 import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
 
 /**
@@ -87,6 +88,63 @@ export const settings = definePluginSettings({
         type: OptionType.BOOLEAN,
         get description() { return t("showCommandItem", currentLang()); },
         default: true
+    },
+    // Пункт выключен по умолчанию: в отличие от остальных, он меняет роли, ник
+    // и публикует сообщение, и включать такое без спроса нельзя.
+    showPromoteItem: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("showPromoteItem", currentLang()); },
+        default: false
+    },
+    stepRoles: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepRoles", currentLang()); },
+        default: true
+    },
+    stepNickname: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepNickname", currentLang()); },
+        default: true
+    },
+    stepAudit: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepAudit", currentLang()); },
+        default: true
+    },
+    stepReaction: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepReaction", currentLang()); },
+        default: true
+    },
+    roleThreshold: {
+        type: OptionType.NUMBER,
+        get description() { return t("roleThreshold", currentLang()); },
+        default: DEFAULT_ROLE_THRESHOLD
+    },
+    rolesToAdd: {
+        type: OptionType.STRING,
+        get description() { return t("rolesToAdd", currentLang()); },
+        default: DEFAULT_ROLES_TO_ADD
+    },
+    rolesToRemove: {
+        type: OptionType.STRING,
+        get description() { return t("rolesToRemove", currentLang()); },
+        default: DEFAULT_ROLES_TO_REMOVE
+    },
+    department: {
+        type: OptionType.STRING,
+        get description() { return t("department", currentLang()); },
+        default: DEFAULT_DEPARTMENT
+    },
+    auditChannelId: {
+        type: OptionType.STRING,
+        get description() { return t("auditChannelId", currentLang()); },
+        default: DEFAULT_AUDIT_CHANNEL_ID
+    },
+    reactionEmoji: {
+        type: OptionType.STRING,
+        get description() { return t("reactionEmoji", currentLang()); },
+        default: DEFAULT_REACTION_EMOJI
     },
     template: {
         type: OptionType.STRING,
