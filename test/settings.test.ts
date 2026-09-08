@@ -10,7 +10,7 @@ import { test } from "node:test";
 // Сам факт успешного импорта «../settings» — половина проверки: сломанная версия
 // падала именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
 import { parseChannelList } from "../channels";
-import { DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
+import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
 import { DEFAULT_ROLE_THRESHOLD } from "../plan";
 import { currentLang, settings } from "../settings";
 import { DEFAULT_COMMAND_TEMPLATE } from "../template";
@@ -52,8 +52,9 @@ test("повышение выключено по умолчанию, а его �
     assert.equal(settings.store.department, DEFAULT_DEPARTMENT);
     assert.equal(settings.store.reactionEmoji, DEFAULT_REACTION_EMOJI);
 
-    // Канал аудита у каждого свой — дефолта нет, шаг честно откажется работать
-    assert.equal(settings.store.auditChannelId, "");
+    // Канал аудита один на фракцию, как и каналы отчётов
+    assert.equal(settings.store.auditChannelId, DEFAULT_AUDIT_CHANNEL_ID);
+    assert.deepEqual(parseChannelList(DEFAULT_AUDIT_CHANNEL_ID), [DEFAULT_AUDIT_CHANNEL_ID]);
 });
 
 test("описания читаются лениво и не пустые", () => {
