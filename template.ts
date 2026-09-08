@@ -9,6 +9,8 @@ export interface AuditData {
     promoterName: string;
     promoterStatic: string;
     targetId: string;
+    /** Discord-хендл повышаемого без «@» (`jellycolonel`), из UserStore. */
+    targetUsername: string;
     targetName: string;
     targetStatic: string;
     oldRank: number | string;
@@ -16,6 +18,7 @@ export interface AuditData {
     reportLink: string;
 }
 
+/** Кадровый аудит текстом — так он писался руками, пока не появился бот. */
 export const DEFAULT_TEMPLATE = [
     "Повышение",
     "Повышает: <@{promoterId}> {promoterName} | {promoterStatic}",
@@ -24,6 +27,17 @@ export const DEFAULT_TEMPLATE = [
     "Новый ранг: {newRank}",
     "Причина повышения: {reportLink}"
 ].join("\n");
+
+/**
+ * Вызов slash-команды бота, заполняющего аудит.
+ *
+ * Аргументы именованные (`пользователь:…`), потому что вставленный текст Discord
+ * в аргументы команды не разбирает: имена нужны, чтобы после выбора команды в
+ * поле ввода значения встали по своим местам, а не в первый попавшийся аргумент.
+ * Повышающий здесь не указывается — бот берёт его из того, кто вызвал команду.
+ */
+export const DEFAULT_COMMAND_TEMPLATE =
+    "/повышение пользователь:@{targetUsername} был:{oldRank} стал:{newRank} причина:{reportLink}";
 
 /** Ссылка на сообщение-отчёт, идущая в строку «Причина повышения». */
 export function messageLink(guildId: string | null | undefined, channelId: string, messageId: string): string {
@@ -34,4 +48,9 @@ export function messageLink(guildId: string | null | undefined, channelId: strin
 export function renderAudit(template: string, data: AuditData): string {
     return template.replace(/\{(\w+)\}/g, (whole, key: string) =>
         key in data ? String(data[key as keyof AuditData]) : whole);
+}
+
+/** Использует ли шаблон хоть один из перечисленных плейсхолдеров. */
+export function usesPlaceholder(template: string, ...keys: (keyof AuditData)[]): boolean {
+    return keys.some(key => template.includes(`{${key}}`));
 }
