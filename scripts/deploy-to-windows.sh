@@ -24,8 +24,16 @@ RESTART_DISCORD="${RESTART_DISCORD:-1}"
 # переживает обновления Discord, которые эту папку переименовывают.
 DISCORD_LAUNCHER="${DISCORD_LAUNCHER:-/mnt/c/Users/$WIN_USER/AppData/Local/Discord/Update.exe}"
 
+# Без конвейера намеренно: `grep -q` закрывает пайп на первом совпадении,
+# tasklist.exe получает SIGPIPE, а `pipefail` считает это ошибкой конвейера —
+# и проверка всегда отвечала «не запущен», молча пропуская перезапуск.
 discord_running() {
-    tasklist.exe /FI "IMAGENAME eq Discord.exe" 2>/dev/null | grep -q "Discord.exe"
+    local tasks
+    tasks="$(tasklist.exe /FI "IMAGENAME eq Discord.exe" 2>/dev/null || true)"
+    case "$tasks" in
+        *Discord.exe*) return 0 ;;
+        *) return 1 ;;
+    esac
 }
 
 [ -d "$VENCORD_REPO" ] || { echo "Нет репозитория Vencord: $VENCORD_REPO" >&2; exit 1; }
