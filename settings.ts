@@ -10,7 +10,7 @@ import { LocaleStore } from "@webpack/common";
 
 import { DEFAULT_REPORT_CHANNEL_ID } from "./constants";
 import { type Lang, resolveLang, t } from "./i18n";
-import { DEFAULT_TEMPLATE } from "./template";
+import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
 
 /**
  * Язык интерфейса плагина; `auto` берётся из языка Discord.
@@ -78,10 +78,26 @@ export const settings = definePluginSettings({
             { get label() { return t("actionBoth", currentLang()); }, value: "both" }
         ]
     },
+    showAuditItem: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("showAuditItem", currentLang()); },
+        default: true
+    },
+    showCommandItem: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("showCommandItem", currentLang()); },
+        default: true
+    },
     template: {
         type: OptionType.STRING,
         get description() { return t("template", currentLang()); },
         default: DEFAULT_TEMPLATE,
+        multiline: true
+    },
+    commandTemplate: {
+        type: OptionType.STRING,
+        get description() { return t("commandTemplate", currentLang()); },
+        default: DEFAULT_COMMAND_TEMPLATE,
         multiline: true
     }
 });

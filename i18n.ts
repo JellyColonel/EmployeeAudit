@@ -18,6 +18,7 @@ export type AuditIssue =
     | { code: "unparsable-ranks"; value: string; }
     | { code: "no-user-mention"; }
     | { code: "promoter-not-configured"; }
+    | { code: "unknown-username"; }
     | { code: "rank-out-of-table"; rank: number; name: string; }
     | { code: "rank-name-mismatch"; rank: number; name: string; expected: string; }
     | { code: "rank-jump"; from: number; to: number; };
@@ -26,8 +27,11 @@ const UI = {
     en: {
         pluginDescription: "Builds an employee audit record from a promotion report (Hospital faction, Russia Online)",
         menuLabel: "Copy Employee Audit",
+        menuLabelCommand: "Copy Promotion Command",
         copied: "Employee audit copied",
         inserted: "Employee audit inserted into the chat box",
+        copiedCommand: "Promotion command copied",
+        insertedCommand: "Promotion command inserted into the chat box",
 
         promoterName: "Your in-game first and last name — the «Повышает» line",
         promoterStatic: "Your Static ID",
@@ -39,14 +43,20 @@ const UI = {
         actionCopy: "Copy to clipboard",
         actionInsert: "Insert into the chat box",
         actionBoth: "Both",
-        template: "Audit template. Placeholders: {promoterId} {promoterName} {promoterStatic} {targetId} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
+        template: "Audit template. Placeholders: {promoterId} {promoterName} {promoterStatic} {targetId} {targetUsername} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
+        commandTemplate: "Bot command template. Same placeholders; {targetUsername} is the Discord handle without «@»",
+        showAuditItem: "Show the «Copy Employee Audit» menu item",
+        showCommandItem: "Show the «Copy Promotion Command» menu item",
         language: "Interface language of this plugin"
     },
     ru: {
         pluginDescription: "Собирает текст кадрового аудита из отчёта на повышение (фракция «Больница», Russia Online)",
         menuLabel: "Скопировать кадровый аудит",
+        menuLabelCommand: "Скопировать команду повышения",
         copied: "Кадровый аудит скопирован",
         inserted: "Кадровый аудит вставлен в поле ввода",
+        copiedCommand: "Команда повышения скопирована",
+        insertedCommand: "Команда повышения вставлена в поле ввода",
 
         promoterName: "Ваше имя и фамилия — строка «Повышает»",
         promoterStatic: "Ваш Static ID",
@@ -58,7 +68,10 @@ const UI = {
         actionCopy: "Скопировать в буфер обмена",
         actionInsert: "Вставить в поле ввода",
         actionBoth: "И то, и другое",
-        template: "Шаблон аудита. Плейсхолдеры: {promoterId} {promoterName} {promoterStatic} {targetId} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
+        template: "Шаблон аудита. Плейсхолдеры: {promoterId} {promoterName} {promoterStatic} {targetId} {targetUsername} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
+        commandTemplate: "Шаблон команды бота. Плейсхолдеры те же; {targetUsername} — Discord-хендл без «@»",
+        showAuditItem: "Показывать пункт «Скопировать кадровый аудит»",
+        showCommandItem: "Показывать пункт «Скопировать команду повышения»",
         language: "Язык интерфейса плагина"
     }
 } satisfies Record<Lang, Record<string, string>>;
@@ -90,6 +103,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "No user mention in the report — cannot tell who was promoted";
             case "promoter-not-configured":
                 return "Fill in your name and Static ID in the plugin settings first";
+            case "unknown-username":
+                return "Discord has no handle cached for the promoted user — open their profile and try again";
             case "rank-out-of-table":
                 return `Rank ${issue.rank} («${issue.name}») is outside the mid-level range (4–11)`;
             case "rank-name-mismatch":
@@ -114,6 +129,8 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "В отчёте нет упоминания повышаемого — некого подставить в «Повышен(а)»";
             case "promoter-not-configured":
                 return "Сначала заполните своё имя и Static ID в настройках плагина";
+            case "unknown-username":
+                return "Discord не знает никнейм повышаемого — откройте его профиль и повторите";
             case "rank-out-of-table":
                 return `Ранг ${issue.rank} («${issue.name}») вне диапазона среднего состава (4–11)`;
             case "rank-name-mismatch":

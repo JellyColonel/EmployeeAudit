@@ -13,7 +13,7 @@ import { isChannelAllowed, parseChannelList } from "../channels";
 import { formatIssue, resolveLang } from "../i18n";
 import { parseNameStatic, parseRanks, parseReport, parseTargetUserId } from "../parser";
 import { validateRanks } from "../ranks";
-import { DEFAULT_TEMPLATE, messageLink, renderAudit } from "../template";
+import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE, messageLink, renderAudit, usesPlaceholder } from "../template";
 
 const SAMPLES = join(import.meta.dirname, "..", "samples");
 
@@ -21,8 +21,9 @@ function report(file: string) {
     return JSON.parse(readFileSync(join(SAMPLES, "reports", file), "utf8"));
 }
 
-function expectedAudit(index: number): string {
-    const text = readFileSync(join(SAMPLES, "audits.txt"), "utf8");
+/** Эталон под номером `index` из файла с примерами (блоки разделены «---»). */
+function expected(file: string, index: number): string {
+    const text = readFileSync(join(SAMPLES, file), "utf8");
     const body = text.split("\n").filter(line => !line.startsWith("#")).join("\n");
     return body.split("---").map(block => block.trim()).filter(Boolean)[index];
 }
@@ -33,21 +34,35 @@ const PROMOTER = {
     promoterStatic: "500"
 };
 
+/** Хендл в отчёте не приходит: плагин берёт его из UserStore по упоминанию. */
+const TARGET_USERNAME = "arthur_belov";
+
 test("сквозной тест: отчёт 01 → эталонный аудит", () => {
     const result = parseReport(report("01-ordinator-to-senior.json"));
     assert.ok(result.ok, result.ok ? "" : formatIssue(result.issue, "ru"));
 
-    const audit = renderAudit(DEFAULT_TEMPLATE, {
+    const data = {
         ...PROMOTER,
         targetId: result.report.targetUserId!,
+        targetUsername: TARGET_USERNAME,
         targetName: result.report.name,
         targetStatic: result.report.staticId,
         oldRank: result.report.oldRank,
         newRank: result.report.newRank,
         reportLink: messageLink("1538690942738112634", "1538690946156462094", "200000000000000001")
-    });
+    };
 
-    assert.equal(audit, expectedAudit(0));
+    assert.equal(renderAudit(DEFAULT_TEMPLATE, data), expected("audits.txt", 0));
+    assert.equal(renderAudit(DEFAULT_COMMAND_TEMPLATE, data), expected("commands.txt", 0));
+});
+
+test("шаблон команды не требует данных повышающего, текстовый — требует", () => {
+    assert.ok(usesPlaceholder(DEFAULT_TEMPLATE, "promoterName", "promoterStatic"));
+    assert.ok(!usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "promoterName", "promoterStatic"));
+
+    // Обратная зависимость: хендл нужен только команде.
+    assert.ok(usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "targetUsername"));
+    assert.ok(!usesPlaceholder(DEFAULT_TEMPLATE, "targetUsername"));
 });
 
 test("ранг из нескольких слов с точками: Зам. зав. отделением [10]", () => {
@@ -135,7 +150,10 @@ test("каждая проблема переводится на оба язык�
         { code: "no-user-mention" },
         { code: "rank-out-of-table", rank: 2, name: "Стажёр" },
         { code: "rank-name-mismatch", rank: 6, name: "Терапевт", expected: "Старший ординатор" },
-        { code: "rank-jump", from: 5, to: 7 }
+        { code: "rank-jump", from: 5, to: 7 },
+        // Дописывать новые коды только в конец: ниже к списку обращаются по индексу.
+        { code: "promoter-not-configured" },
+        { code: "unknown-username" }
     ] as const;
 
     for (const issue of issues) {

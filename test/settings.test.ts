@@ -10,9 +10,11 @@ import { test } from "node:test";
 // Сам факт успешного импорта — половина проверки: сломанная версия падала
 // именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
 import { currentLang, settings } from "../settings";
+import { DEFAULT_COMMAND_TEMPLATE } from "../template";
 import { setLocale } from "./stubs/vencord.mjs";
 
-const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "channelIds", "action", "template"] as const;
+const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "channelIds", "action",
+    "showAuditItem", "showCommandItem", "template", "commandTemplate"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
@@ -22,6 +24,11 @@ test("модуль настроек грузится и отдаёт store с у
     assert.equal(settings.store.promoterName, "");
     assert.equal(settings.store.promoterStatic, "");
     assert.equal(settings.store.promoterId, "");
+
+    // Оба пункта меню показываются, пока их не выключили
+    assert.equal(settings.store.showAuditItem, true);
+    assert.equal(settings.store.showCommandItem, true);
+    assert.equal(settings.store.commandTemplate, DEFAULT_COMMAND_TEMPLATE);
 });
 
 test("описания читаются лениво и не пустые", () => {
