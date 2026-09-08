@@ -10,8 +10,15 @@ export const DEFAULT_REPORT_CHANNEL_ID = "1538690946156462094";
 /** Канал, где повышения оформляют короткой заявкой, без бота. */
 export const DEFAULT_REQUEST_CHANNEL_ID = "1541899893780516924";
 
-/** Оба канала — значение настройки `channelIds` по умолчанию. */
-export const DEFAULT_CHANNEL_IDS = [DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID].join(",");
+/** Канал, где бот принимает заявления на увольнение. */
+export const DEFAULT_DISMISSAL_CHANNEL_ID = "1540668018894438440";
+
+/** Все три канала — значение настройки `channelIds` по умолчанию. */
+export const DEFAULT_CHANNEL_IDS = [
+    DEFAULT_REPORT_CHANNEL_ID,
+    DEFAULT_REQUEST_CHANNEL_ID,
+    DEFAULT_DISMISSAL_CHANNEL_ID
+].join(",");
 
 /** Заголовок embed'а отчёта. Сравнение нечувствительно к регистру и «е/ё». */
 export const REPORT_TITLE = "Отчет на повышение";
@@ -31,6 +38,14 @@ export const DEFAULT_ROLES_TO_REMOVE = "1538690943107072085";
 
 /** Отдел в никнейме: `Отдел | Имя Фамилия | Static ID`. */
 export const DEFAULT_DEPARTMENT = "СМП";
+
+/**
+ * Роль, которая остаётся у уволенного вместо всех прочих, — «Гражданин».
+ */
+export const DEFAULT_CITIZEN_ROLE_ID = "1538718995811672175";
+
+/** Отдел в нике уволенного: «Гр.» от «Гражданин», как называется и роль. */
+export const DEFAULT_DISMISSAL_DEPARTMENT = "Гр.";
 
 /** Отметка обработанного сообщения. */
 export const DEFAULT_REACTION_EMOJI = "✅";

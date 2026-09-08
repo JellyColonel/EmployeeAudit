@@ -10,7 +10,18 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 import { isDismissalRequest, parseDismissal, parseNickParts, parseUserId } from "../dismissal";
+import { buildDismissalPlan, type DismissalSettings } from "../dismissalPlan";
 import { isPromotionReport, isShortPromotion } from "../parser";
+
+const SETTINGS: DismissalSettings = {
+    stepDismissalRoles: true,
+    stepDismissalNickname: true,
+    stepDismissalReaction: true,
+    stepDismissalCommand: true,
+    citizenRoleId: "1538718995811672175",
+    dismissalDepartment: "Гр.",
+    reactionEmoji: "✅"
+};
 
 const SAMPLES = join(import.meta.dirname, "..", "samples", "reports");
 
@@ -69,4 +80,68 @@ test("ник разбирается вместе с отделом, в отли�
 test("чужое сообщение заявлением не считается", () => {
     assert.equal(isDismissalRequest({ content: "увольнение", embeds: [] }), false);
     assert.equal(parseDismissal({ content: "", embeds: [] }).ok, false);
+});
+
+test("план увольнения: снять всё, оставить гражданина, сменить отдел", () => {
+    const result = parseDismissal(sample("06-dismissal.json"));
+    assert.ok(result.ok);
+
+    const plan = buildDismissalPlan({
+        dismissal: result.dismissal,
+        settings: SETTINGS,
+        member: {
+            roles: ["900000000000000001", "900000000000000002", "900000000000000003"],
+            nick: "ПСЭС | Ольга Юрьева | 66242",
+            // Роль от интеграции снять нельзя — Discord отклонил бы весь запрос
+            untouchable: ["900000000000000003"]
+        },
+        commandText: "/увольнение пользователь:<@100000000000000002> ранг:6 причина:https://example.com"
+    });
+
+    assert.ok(plan.ok);
+    assert.deepEqual(plan.plan.roles, {
+        next: ["900000000000000003", "1538718995811672175"],
+        removed: ["900000000000000001", "900000000000000002"]
+    });
+    assert.deepEqual(plan.plan.nickname, {
+        from: "ПСЭС | Ольга Юрьева | 66242",
+        to: "Гр. | Ольга Юрьева | 66242"
+    });
+    assert.equal(plan.plan.reaction, "✅");
+    assert.match(plan.plan.command!, /^\/увольнение /);
+});
+
+test("ушедшему с сервера роли и ник не трогаем", () => {
+    const result = parseDismissal(sample("06-dismissal.json"));
+    assert.ok(result.ok);
+
+    const plan = buildDismissalPlan({
+        dismissal: result.dismissal,
+        settings: SETTINGS,
+        member: null,
+        commandText: "/увольнение …"
+    });
+
+    assert.ok(plan.ok);
+    assert.equal(plan.plan.roles, null);
+    assert.equal(plan.plan.nickname, null);
+    // Заявление всё равно надо отметить и оформить
+    assert.equal(plan.plan.reaction, "✅");
+    assert.ok(plan.plan.command);
+});
+
+test("роль гражданина уже единственная — шага с ролями нет", () => {
+    const result = parseDismissal(sample("06-dismissal.json"));
+    assert.ok(result.ok);
+
+    const plan = buildDismissalPlan({
+        dismissal: result.dismissal,
+        settings: SETTINGS,
+        member: { roles: ["1538718995811672175"], nick: "Гр. | Ольга Юрьева | 66242", untouchable: [] },
+        commandText: "/увольнение …"
+    });
+
+    assert.ok(plan.ok);
+    assert.equal(plan.plan.roles, null);
+    assert.equal(plan.plan.nickname, null, "отдел в нике уже «Гр.»");
 });

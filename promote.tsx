@@ -7,20 +7,12 @@
 import { Guild, Message } from "@vencord/discord-types";
 import { Alerts, ChannelStore, GuildMemberStore, GuildRoleStore, GuildStore, PermissionStore, showToast, Toasts, UserStore } from "@webpack/common";
 
-import { executePlan, type ExecutionResult, type PromotionStep } from "./actions";
+import { executePlan } from "./actions";
 import { type AuditIssue, formatIssue, type Lang, t } from "./i18n";
 import { type ParsedReport } from "./parser";
 import { buildPlan, isPlanEmpty, type PromotionPlan } from "./plan";
 import { settings } from "./settings";
-
-/** Название роли для сводки; неизвестная роль показывается своим ID. */
-function roleName(guildId: string, roleId: string): string {
-    try {
-        return GuildRoleStore.getRole(guildId, roleId)?.name ?? roleId;
-    } catch {
-        return roleId;
-    }
-}
+import { reportResult, roleName, summaryModal } from "./shared";
 
 /**
  * Одного «Управлять ролями» мало: Discord не даёт трогать роли, которые не ниже
@@ -99,49 +91,6 @@ function summaryRows(plan: PromotionPlan, report: ParsedReport, guildId: string,
     return rows;
 }
 
-function confirm(plan: PromotionPlan, report: ParsedReport, guildId: string, lang: Lang): Promise<boolean> {
-    const rows = summaryRows(plan, report, guildId, lang);
-    return Alerts.confirm({
-        title: t("confirmTitle", lang),
-        confirmText: t("confirmButton", lang),
-        cancelText: t("cancelButton", lang),
-        body: (
-            <div>
-                {rows.map(([label, value]) => (
-                    <div key={label} style={{ marginBottom: 4 }}>
-                        <strong>{label}:</strong> {value}
-                    </div>
-                ))}
-            </div>
-        )
-    });
-}
-
-/** Итог показывается тостом: что прошло и, если не всё, на чём остановилось. */
-function reportResult(result: ExecutionResult, lang: Lang): void {
-    const names: Record<PromotionStep, string> = {
-        roles: t("stepNameRoles", lang),
-        nickname: t("stepNameNickname", lang),
-        audit: t("stepNameAudit", lang),
-        reaction: t("stepNameReaction", lang),
-        command: t("stepNameCommand", lang)
-    };
-
-    if (!result.failed) {
-        // Про буфер обмена стоит сказать явно: иначе неясно, что там уже лежит
-        const key = result.done.includes("command") ? "promotionDoneCommand" : "promotionDone";
-        showToast(t(key, lang), Toasts.Type.SUCCESS);
-        return;
-    }
-
-    const done = result.done.map(step => names[step]).join(", ");
-    const message = `${t("promotionFailedAt", lang)}: ${names[result.failed]}`
-        + (done ? `. ${t("promotionCompleted", lang)}: ${done}` : "");
-
-    console.error("[EmployeeAudit] промежуточная ошибка повышения", result.error);
-    showToast(message, Toasts.Type.FAILURE);
-}
-
 export interface PromoteContext {
     message: Message;
     report: ParsedReport;
@@ -181,13 +130,13 @@ export async function runPromotion({ message, report, auditText, commandText, la
     const denied = checkPermissions(guildId, plan);
     if (denied) return fail(denied);
 
-    if (!await confirm(plan, report, guildId, lang)) return;
+    const rows = summaryRows(plan, report, guildId, lang);
+    if (!await Alerts.confirm(summaryModal(rows, t("confirmTitle", lang), lang))) return;
 
-    const result = await executePlan(plan, {
+    reportResult(await executePlan(plan, {
         guildId,
         userId: targetUserId,
         channelId: message.channel_id,
         messageId: message.id
-    });
-    reportResult(result, lang);
+    }), lang);
 }

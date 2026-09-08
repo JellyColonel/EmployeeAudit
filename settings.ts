@@ -8,10 +8,10 @@ import { definePluginSettings } from "@api/Settings";
 import { OptionType } from "@utils/types";
 import { LocaleStore } from "@webpack/common";
 
-import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_ROLES_TO_ADD, DEFAULT_ROLES_TO_REMOVE } from "./constants";
+import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_CITIZEN_ROLE_ID, DEFAULT_DEPARTMENT, DEFAULT_DISMISSAL_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_ROLES_TO_ADD, DEFAULT_ROLES_TO_REMOVE } from "./constants";
 import { type Lang, resolveLang, t } from "./i18n";
 import { DEFAULT_ROLE_THRESHOLD } from "./plan";
-import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
+import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_DISMISSAL_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
 
 /**
  * Язык интерфейса плагина; `auto` берётся из языка Discord.
@@ -153,6 +153,48 @@ export const settings = definePluginSettings({
         type: OptionType.STRING,
         get description() { return t("reactionEmoji", currentLang()); },
         default: DEFAULT_REACTION_EMOJI
+    },
+    // Как и повышение, увольнение выключено по умолчанию: оно снимает все роли.
+    showDismissItem: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("showDismissItem", currentLang()); },
+        default: false
+    },
+    stepDismissalRoles: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepDismissalRoles", currentLang()); },
+        default: true
+    },
+    stepDismissalNickname: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepDismissalNickname", currentLang()); },
+        default: true
+    },
+    stepDismissalReaction: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepDismissalReaction", currentLang()); },
+        default: true
+    },
+    stepDismissalCommand: {
+        type: OptionType.BOOLEAN,
+        get description() { return t("stepDismissalCommand", currentLang()); },
+        default: true
+    },
+    citizenRoleId: {
+        type: OptionType.STRING,
+        get description() { return t("citizenRoleId", currentLang()); },
+        default: DEFAULT_CITIZEN_ROLE_ID
+    },
+    dismissalDepartment: {
+        type: OptionType.STRING,
+        get description() { return t("dismissalDepartment", currentLang()); },
+        default: DEFAULT_DISMISSAL_DEPARTMENT
+    },
+    dismissalCommandTemplate: {
+        type: OptionType.STRING,
+        get description() { return t("dismissalCommandTemplate", currentLang()); },
+        default: DEFAULT_DISMISSAL_COMMAND_TEMPLATE,
+        multiline: true
     },
     template: {
         type: OptionType.STRING,

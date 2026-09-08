@@ -33,6 +33,8 @@ export type AuditIssue =
     | { code: "reaction-not-set"; }
     | { code: "empty-command"; }
     | { code: "no-dismissal-embed"; }
+    | { code: "citizen-role-not-set"; }
+    | { code: "member-lookup-failed"; }
     | { code: "unknown-role"; value: string; }
     | { code: "role-too-high"; value: string; }
     | { code: "nothing-to-do"; };
@@ -95,7 +97,25 @@ const UI = {
         stepNameReaction: "checkmark",
         stepNameCommand: "command",
         promotionDone: "Promotion carried out",
-        promotionDoneCommand: "Promotion carried out, the command is in the clipboard",
+        promotionDoneCommand: "Done, the command is in the clipboard",
+
+        menuLabelDismiss: "Carry Out Dismissal",
+        showDismissItem: "Show the «Carry Out Dismissal» menu item. It takes away every role, leaves the citizen one, renames the department in the nickname and copies the /увольнение command",
+        stepDismissalRoles: "Dismissal step: take away every role and grant the citizen one",
+        stepDismissalNickname: "Dismissal step: change the department in the nickname",
+        stepDismissalReaction: "Dismissal step: react to the request message",
+        stepDismissalCommand: "Dismissal step: copy the /увольнение command to the clipboard",
+        citizenRoleId: "ID of the role a dismissed employee is left with",
+        dismissalDepartment: "Department for a dismissed employee's nickname — the first segment, «Гр.» from «Гражданин»",
+        dismissalCommandTemplate: "Dismissal command template. Placeholders: {targetId} {targetName} {targetStatic} {department} {rank} {reason} {reportLink} {inventoryLink}",
+
+        confirmDismissalTitle: "Carry out the dismissal?",
+        summaryRank: "Rank",
+        summaryDepartment: "Department",
+        summaryReason: "Reason",
+        summaryRolesLeft: "Roles left",
+        summaryMember: "On the server",
+        summaryMemberGone: "already left — roles and nickname are skipped",
         promotionFailedAt: "Failed at step",
         promotionCompleted: "Completed"
     },
@@ -156,7 +176,25 @@ const UI = {
         stepNameReaction: "галочка",
         stepNameCommand: "команда",
         promotionDone: "Повышение проведено",
-        promotionDoneCommand: "Повышение проведено, команда в буфере обмена",
+        promotionDoneCommand: "Готово, команда в буфере обмена",
+
+        menuLabelDismiss: "Провести увольнение",
+        showDismissItem: "Показывать пункт «Провести увольнение». Он снимает все роли, оставляет роль гражданина, меняет отдел в нике и копирует команду /увольнение",
+        stepDismissalRoles: "Шаг увольнения: снять все роли и выдать роль гражданина",
+        stepDismissalNickname: "Шаг увольнения: менять отдел в никнейме",
+        stepDismissalReaction: "Шаг увольнения: ставить реакцию на заявление",
+        stepDismissalCommand: "Шаг увольнения: копировать команду /увольнение в буфер обмена",
+        citizenRoleId: "ID роли, которая остаётся у уволенного",
+        dismissalDepartment: "Отдел в нике уволенного — первый сегмент, «Гр.» от «Гражданин»",
+        dismissalCommandTemplate: "Шаблон команды увольнения. Плейсхолдеры: {targetId} {targetName} {targetStatic} {department} {rank} {reason} {reportLink} {inventoryLink}",
+
+        confirmDismissalTitle: "Провести увольнение?",
+        summaryRank: "Ранг",
+        summaryDepartment: "Отдел",
+        summaryReason: "Причина",
+        summaryRolesLeft: "Останутся роли",
+        summaryMember: "На сервере",
+        summaryMemberGone: "уже вышел — роли и ник пропускаются",
         promotionFailedAt: "Ошибка на шаге",
         promotionCompleted: "Выполнено"
     }
@@ -219,6 +257,10 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "The bot command came out empty — check its template in the settings";
             case "no-dismissal-embed":
                 return "This message is not a dismissal request";
+            case "citizen-role-not-set":
+                return "Fill in the citizen role ID in the plugin settings first";
+            case "member-lookup-failed":
+                return "Could not check whether the employee is still on the server — try again";
             case "unknown-role":
                 return `This server has no role with ID ${issue.value} — check the role IDs in the settings`;
             case "role-too-high":
@@ -273,6 +315,10 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Команда бота вышла пустой — проверьте её шаблон в настройках";
             case "no-dismissal-embed":
                 return "Сообщение не похоже на заявление на увольнение";
+            case "citizen-role-not-set":
+                return "Сначала укажите в настройках плагина ID роли гражданина";
+            case "member-lookup-failed":
+                return "Не удалось проверить, остался ли сотрудник на сервере — попробуйте ещё раз";
             case "unknown-role":
                 return `На сервере нет роли с ID ${issue.value} — проверьте ID ролей в настройках`;
             case "role-too-high":
