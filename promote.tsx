@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-import { Message } from "@vencord/discord-types";
+import { Guild, Message } from "@vencord/discord-types";
 import { Alerts, ChannelStore, GuildMemberStore, GuildRoleStore, GuildStore, PermissionStore, showToast, Toasts, UserStore } from "@webpack/common";
 
 import { executePlan, type ExecutionResult, type PromotionStep } from "./actions";
@@ -23,6 +23,30 @@ function roleName(guildId: string, roleId: string): string {
 }
 
 /**
+ * Одного «Управлять ролями» мало: Discord не даёт трогать роли, которые не ниже
+ * твоей высшей. Без этой проверки отказ пришёл бы уже посреди выполнения — после
+ * того, как часть ролей сменилась.
+ */
+function checkRoleHierarchy(guild: Guild, roleIds: string[]): AuditIssue | null {
+    // Владельцу сервера иерархия не мешает
+    if (PermissionStore.getGuildPermissionProps(guild).isOwner) return null;
+
+    const highest = PermissionStore.getHighestRole(guild);
+
+    for (const roleId of roleIds) {
+        const role = GuildRoleStore.getRole(guild.id, roleId);
+        // Неизвестная роль — почти всегда опечатка в ID: молчать о ней хуже,
+        // чем остановиться, потому что иначе выдалась бы только вторая из пары.
+        if (!role) return { code: "unknown-role", value: roleId };
+        if (!PermissionStore.isRoleHigher(guild, highest, role)) {
+            return { code: "role-too-high", value: role.name };
+        }
+    }
+
+    return null;
+}
+
+/**
  * Права проверяются заранее, а не по отказу сервера: узнать «нельзя» до того,
  * как часть шагов уже выполнена, гораздо полезнее, чем после.
  */
@@ -33,6 +57,12 @@ function checkPermissions(guildId: string, plan: PromotionPlan): AuditIssue | nu
     const props = PermissionStore.getGuildPermissionProps(guild);
     if (plan.roles && !props.canManageRoles) return { code: "no-manage-roles" };
     if (plan.nickname && !props.canManageNicknames) return { code: "no-manage-nicknames" };
+
+    if (plan.roles) {
+        const denied = checkRoleHierarchy(guild, [...plan.roles.add, ...plan.roles.remove]);
+        if (denied) return denied;
+    }
+
     return null;
 }
 

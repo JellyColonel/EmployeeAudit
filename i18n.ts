@@ -32,6 +32,8 @@ export type AuditIssue =
     | { code: "audit-channel-not-set"; }
     | { code: "reaction-not-set"; }
     | { code: "empty-command"; }
+    | { code: "unknown-role"; value: string; }
+    | { code: "role-too-high"; value: string; }
     | { code: "nothing-to-do"; };
 
 const UI = {
@@ -214,6 +216,10 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Fill in the checkmark emoji in the plugin settings first";
             case "empty-command":
                 return "The bot command came out empty — check its template in the settings";
+            case "unknown-role":
+                return `This server has no role with ID ${issue.value} — check the role IDs in the settings`;
+            case "role-too-high":
+                return `The «${issue.value}» role is not below your highest one, so Discord will not let you touch it`;
             case "nothing-to-do":
                 return "Every promotion step is turned off — there is nothing to do";
         }
@@ -262,6 +268,10 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "Сначала укажите в настройках плагина эмодзи для отметки";
             case "empty-command":
                 return "Команда бота вышла пустой — проверьте её шаблон в настройках";
+            case "unknown-role":
+                return `На сервере нет роли с ID ${issue.value} — проверьте ID ролей в настройках`;
+            case "role-too-high":
+                return `Роль «${issue.value}» не ниже вашей высшей, Discord не даст её тронуть`;
             case "nothing-to-do":
                 return "Все шаги повышения выключены — делать нечего";
         }
