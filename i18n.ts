@@ -107,6 +107,7 @@ const UI = {
         stepDismissalCommand: "Dismissal step: copy the /увольнение command to the clipboard",
         citizenRoleId: "ID of the role a dismissed employee is left with",
         dismissalDepartment: "Department for a dismissed employee's nickname — the first segment, «Гр.» from «Гражданин»",
+        dismissalNoDiscordCommandTemplate: "Command template for someone who already left the server: the bot cannot resolve a mention for them, so the name goes as text and the Discord ID as its own argument. Same placeholders",
         dismissalCommandTemplate: "Dismissal command template. Placeholders: {targetId} {targetName} {targetStatic} {department} {rank} {reason} {reportLink} {inventoryLink}",
 
         confirmDismissalTitle: "Carry out the dismissal?",
@@ -186,6 +187,7 @@ const UI = {
         stepDismissalCommand: "Шаг увольнения: копировать команду /увольнение в буфер обмена",
         citizenRoleId: "ID роли, которая остаётся у уволенного",
         dismissalDepartment: "Отдел в нике уволенного — первый сегмент, «Гр.» от «Гражданин»",
+        dismissalNoDiscordCommandTemplate: "Шаблон команды для того, кто уже вышел с сервера: упоминание для него бот не разрешит, поэтому имя идёт текстом, а Discord ID отдельным аргументом. Плейсхолдеры те же",
         dismissalCommandTemplate: "Шаблон команды увольнения. Плейсхолдеры: {targetId} {targetName} {targetStatic} {department} {rank} {reason} {reportLink} {inventoryLink}",
 
         confirmDismissalTitle: "Провести увольнение?",

@@ -9,10 +9,11 @@ import { Alerts, ChannelStore, GuildMemberStore, GuildRoleStore, GuildStore, Per
 
 import { executeDismissalPlan, fetchMember } from "./actions";
 import { type ParsedDismissal } from "./dismissal";
-import { buildDismissalPlan, type DismissalPlan, isDismissalPlanEmpty, type MemberState } from "./dismissalPlan";
+import { buildDismissalPlan, type DismissalCommandTemplates, type DismissalPlan, isDismissalPlanEmpty, type MemberState, renderDismissalCommand } from "./dismissalPlan";
 import { type AuditIssue, formatIssue, type Lang, t } from "./i18n";
 import { settings } from "./settings";
 import { reportResult, roleName, summaryModal } from "./shared";
+import { type DismissalData } from "./template";
 
 /**
  * Роли, которые снять всё равно не выйдет: выданные интеграциями и стоящие не
@@ -73,7 +74,9 @@ function summaryRows(plan: DismissalPlan, dismissal: ParsedDismissal, guildId: s
 export interface DismissContext {
     message: Message;
     dismissal: ParsedDismissal;
-    commandText: string;
+    /** Данные для команды; какая из двух — решается после проверки членства. */
+    data: DismissalData;
+    templates: DismissalCommandTemplates;
     lang: Lang;
 }
 
@@ -82,7 +85,7 @@ export interface DismissContext {
  * заявление и положить команду в буфер. Человека, успевшего выйти с сервера,
  * это не ломает — два первых шага просто пропускаются.
  */
-export async function runDismissal({ message, dismissal, commandText, lang }: DismissContext): Promise<void> {
+export async function runDismissal({ message, dismissal, data, templates, lang }: DismissContext): Promise<void> {
     const fail = (issue: AuditIssue) => showToast(formatIssue(issue, lang), Toasts.Type.FAILURE);
 
     const guildId = ChannelStore.getChannel(message.channel_id)?.guild_id;
@@ -99,6 +102,10 @@ export async function runDismissal({ message, dismissal, commandText, lang }: Di
     const props = PermissionStore.getGuildPermissionProps(guild);
     if (member && settings.store.stepDismissalRoles && !props.canManageRoles) return fail({ code: "no-manage-roles" });
     if (member && settings.store.stepDismissalNickname && !props.canManageNicknames) return fail({ code: "no-manage-nicknames" });
+
+    const commandText = settings.store.stepDismissalCommand
+        ? renderDismissalCommand(templates, data, member === null)
+        : "";
 
     const built = buildDismissalPlan({ dismissal, settings: settings.store, member, commandText });
     if (!built.ok) return fail(built.issue);

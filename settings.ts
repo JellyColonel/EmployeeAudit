@@ -11,7 +11,7 @@ import { LocaleStore } from "@webpack/common";
 import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_CITIZEN_ROLE_ID, DEFAULT_DEPARTMENT, DEFAULT_DISMISSAL_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_ROLES_TO_ADD, DEFAULT_ROLES_TO_REMOVE } from "./constants";
 import { type Lang, resolveLang, t } from "./i18n";
 import { DEFAULT_ROLE_THRESHOLD } from "./plan";
-import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_DISMISSAL_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
+import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_DISMISSAL_COMMAND_TEMPLATE, DEFAULT_DISMISSAL_NO_DISCORD_COMMAND_TEMPLATE, DEFAULT_TEMPLATE } from "./template";
 
 /**
  * Язык интерфейса плагина; `auto` берётся из языка Discord.
@@ -194,6 +194,12 @@ export const settings = definePluginSettings({
         type: OptionType.STRING,
         get description() { return t("dismissalCommandTemplate", currentLang()); },
         default: DEFAULT_DISMISSAL_COMMAND_TEMPLATE,
+        multiline: true
+    },
+    dismissalNoDiscordCommandTemplate: {
+        type: OptionType.STRING,
+        get description() { return t("dismissalNoDiscordCommandTemplate", currentLang()); },
+        default: DEFAULT_DISMISSAL_NO_DISCORD_COMMAND_TEMPLATE,
         multiline: true
     },
     template: {
