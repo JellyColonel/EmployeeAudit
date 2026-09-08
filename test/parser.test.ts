@@ -60,9 +60,18 @@ test("шаблон команды не требует данных повыша�
     assert.ok(usesPlaceholder(DEFAULT_TEMPLATE, "promoterName", "promoterStatic"));
     assert.ok(!usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "promoterName", "promoterStatic"));
 
-    // Обратная зависимость: хендл нужен только команде.
-    assert.ok(usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "targetUsername"));
+    // Оба шаблона обходятся упоминанием: хендл нужен, только если его вписали сами.
+    assert.ok(usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "targetId"));
+    assert.ok(!usesPlaceholder(DEFAULT_COMMAND_TEMPLATE, "targetUsername"));
     assert.ok(!usesPlaceholder(DEFAULT_TEMPLATE, "targetUsername"));
+});
+
+test("хендл остаётся доступным плейсхолдером для своего шаблона", () => {
+    const custom = "/повышение пользователь:@{targetUsername} был:{oldRank}";
+    assert.ok(usesPlaceholder(custom, "targetUsername"));
+    assert.equal(
+        renderAudit(custom, { targetUsername: TARGET_USERNAME, oldRank: 5 } as never),
+        "/повышение пользователь:@arthur_belov был:5");
 });
 
 test("ранг из нескольких слов с точками: Зам. зав. отделением [10]", () => {

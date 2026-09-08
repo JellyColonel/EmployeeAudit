@@ -44,7 +44,7 @@ const UI = {
         actionInsert: "Insert into the chat box",
         actionBoth: "Both",
         template: "Audit template. Placeholders: {promoterId} {promoterName} {promoterStatic} {targetId} {targetUsername} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
-        commandTemplate: "Bot command template. Same placeholders; {targetUsername} is the Discord handle without «@»",
+        commandTemplate: "Bot command template. Same placeholders; the command's user argument is filled from the <@{targetId}> mention",
         showAuditItem: "Show the «Copy Employee Audit» menu item",
         showCommandItem: "Show the «Copy Promotion Command» menu item",
         language: "Interface language of this plugin"
@@ -69,7 +69,7 @@ const UI = {
         actionInsert: "Вставить в поле ввода",
         actionBoth: "И то, и другое",
         template: "Шаблон аудита. Плейсхолдеры: {promoterId} {promoterName} {promoterStatic} {targetId} {targetUsername} {targetName} {targetStatic} {oldRank} {newRank} {reportLink}",
-        commandTemplate: "Шаблон команды бота. Плейсхолдеры те же; {targetUsername} — Discord-хендл без «@»",
+        commandTemplate: "Шаблон команды бота. Плейсхолдеры те же; аргумент «пользователь» заполняется из упоминания <@{targetId}>",
         showAuditItem: "Показывать пункт «Скопировать кадровый аудит»",
         showCommandItem: "Показывать пункт «Скопировать команду повышения»",
         language: "Язык интерфейса плагина"
