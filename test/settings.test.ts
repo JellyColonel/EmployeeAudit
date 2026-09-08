@@ -42,11 +42,15 @@ test("повышение выключено по умолчанию, а его �
     // Пункт меняет роли, ник и пишет в канал, поэтому включается вручную.
     assert.equal(settings.store.showPromoteItem, false);
 
-    // Сами шаги включены: когда пункт включат, он должен делать всё, а не молчать
+    // Шаги, которые делает сам плагин, включены: когда пункт включат, он должен
+    // работать, а не молчать
     assert.equal(settings.store.stepRoles, true);
     assert.equal(settings.store.stepNickname, true);
-    assert.equal(settings.store.stepAudit, true);
     assert.equal(settings.store.stepReaction, true);
+
+    // Кроме текстового аудита: его теперь пишет бот по /повышение, а команду
+    // плагин отправить не может — она ушла бы обычным сообщением
+    assert.equal(settings.store.stepAudit, false);
 
     assert.equal(settings.store.roleThreshold, DEFAULT_ROLE_THRESHOLD);
     assert.equal(settings.store.department, DEFAULT_DEPARTMENT);

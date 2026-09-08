@@ -106,10 +106,13 @@ export const settings = definePluginSettings({
         get description() { return t("stepNickname", currentLang()); },
         default: true
     },
+    // Выключен: с сентября 2026 аудит заполняет бот по /повышение, а отправить
+    // slash-команду плагин не может — она ушла бы обычным текстом. Шаг остаётся
+    // для текстовых аудитов, как их писали до бота.
     stepAudit: {
         type: OptionType.BOOLEAN,
         get description() { return t("stepAudit", currentLang()); },
-        default: true
+        default: false
     },
     stepReaction: {
         type: OptionType.BOOLEAN,
