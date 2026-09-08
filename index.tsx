@@ -19,7 +19,7 @@ import { currentLang, settings } from "./settings";
 import { AuditData, messageLink, renderAudit, usesPlaceholder } from "./template";
 
 type BuildResult =
-    | { ok: true; text: string; warnings: AuditIssue[]; }
+    | { ok: true; text: string; }
     | { ok: false; issue: AuditIssue; };
 
 /**
@@ -69,7 +69,7 @@ function buildAudit(message: Message, template: string): BuildResult {
         reportLink: report.reportLink ?? messageLink(guildId, message.channel_id, message.id)
     };
 
-    return { ok: true, text: renderAudit(template, data), warnings: result.warnings };
+    return { ok: true, text: renderAudit(template, data) };
 }
 
 async function handleClick(message: Message, template: string, toasts: { copied: UiKey; inserted: UiKey; }) {
@@ -88,9 +88,6 @@ async function handleClick(message: Message, template: string, toasts: { copied:
 
     if (shouldCopy) await copyWithToast(built.text, t(toasts.copied, lang));
     else if (shouldInsert) showToast(t(toasts.inserted, lang), Toasts.Type.SUCCESS);
-
-    // Предупреждения не мешают работе: аудит уже собран, но отчёт выглядит странно.
-    for (const warning of built.warnings) showToast(`⚠️ ${formatIssue(warning, lang)}`, Toasts.Type.MESSAGE);
 }
 
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {

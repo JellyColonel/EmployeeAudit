@@ -6,7 +6,6 @@
 
 import { FIELD_NAME_STATIC, FIELD_RANKS, REPORT_TITLE } from "./constants";
 import { type AuditIssue } from "./i18n";
-import { validateRanks } from "./ranks";
 
 /** Минимальные формы объектов Discord, которые нужны парсеру. */
 export interface EmbedFieldLike {
@@ -54,8 +53,7 @@ export interface ParsedReport {
 }
 
 export type ParseResult =
-    /** `warnings` не блокируют копирование — это сигналы о странном отчёте. */
-    | { ok: true; report: ParsedReport; warnings: AuditIssue[]; }
+    | { ok: true; report: ParsedReport; }
     | { ok: false; issue: AuditIssue; };
 
 /** Приводит строку к виду, пригодному для сравнения: нижний регистр, «ё» → «е». */
@@ -195,16 +193,11 @@ export function parseReport(message: MessageLike): ParseResult {
             ...nameStatic,
             ...ranks,
             source: "embed"
-        },
-        warnings: validateRanks(ranks.oldRank, ranks.newRank, ranks.oldRankName, ranks.newRankName)
+        }
     };
 }
 
-/**
- * Короткая заявка. Имени и статика в ней нет — они остаются пустыми, а
- * названий рангов нет вовсе, поэтому сверять с таблицей нечего: проверяются
- * только номера.
- */
+/** Короткая заявка. Имени, статика и названий рангов в ней нет — остаются пустыми. */
 function parseShortReport(message: MessageLike): ParseResult {
     const content = message.content ?? "";
 
@@ -228,7 +221,6 @@ function parseShortReport(message: MessageLike): ParseResult {
             reportLink,
             source: "short",
             ...ranks
-        },
-        warnings: validateRanks(ranks.oldRank, ranks.newRank)
+        }
     };
 }

@@ -12,7 +12,6 @@ import { test } from "node:test";
 import { isChannelAllowed, parseChannelList } from "../channels";
 import { formatIssue, resolveLang } from "../i18n";
 import { isPromotionReport, isShortPromotion, looksLikePromotion, parseMessageLink, parseNameStatic, parseRanks, parseReport, parseShortRanks, parseTargetUserId } from "../parser";
-import { validateRanks } from "../ranks";
 import { DEFAULT_COMMAND_TEMPLATE, DEFAULT_TEMPLATE, messageLink, renderAudit, usesPlaceholder } from "../template";
 
 const SAMPLES = join(import.meta.dirname, "..", "samples");
@@ -101,15 +100,6 @@ test("сквозной тест: короткая заявка → команд�
     assert.equal(audit, expected("commands.txt", 4));
 });
 
-test("заявка: ранг вне таблицы предупреждает, но названия не сверяются", () => {
-    const result = parseReport(report("05-short-form.json"));
-    assert.ok(result.ok);
-
-    // Ранг 3 ниже среднего состава — одно предупреждение и никаких «mismatch»
-    assert.deepEqual(result.warnings, [{ code: "rank-out-of-table", rank: 3, name: "" }]);
-    assert.equal(formatIssue(result.warnings[0], "ru"), "Ранг 3 вне диапазона среднего состава (4–11)");
-});
-
 test("повышаемый в заявке — первое упоминание, роли в конце не в счёт", () => {
     const content = "<@111> \n3-4\nhttps://discord.com/channels/1/2/3\n<@&444> <@&555>";
     assert.equal(parseTargetUserId(content, "first"), "111");
@@ -166,7 +156,6 @@ test("ранг из нескольких слов с точками: Зам. з�
         newRankName: "Зам. зав. отделением",
         source: "embed"
     });
-    assert.deepEqual(result.warnings, []);
 });
 
 test("многострочное поле «Остальное» не мешает разбору", () => {
@@ -205,21 +194,6 @@ test("ранги: разные виды стрелки", () => {
     assert.equal(parseRanks("Ординатор → Старший ординатор"), null);
 });
 
-test("проверка по таблице СМП ловит опечатку и прыжок через ранг", () => {
-    assert.deepEqual(validateRanks(5, 6, "Ординатор", "Старший ординатор"), []);
-    assert.deepEqual(validateRanks(10, 11, "Зам зав отделением", "Заведующий отделением"), []);
-
-    assert.deepEqual(validateRanks(5, 6, "Ординатор", "Терапевт"),
-        [{ code: "rank-name-mismatch", rank: 6, name: "Терапевт", expected: "Старший ординатор" }]);
-
-    assert.deepEqual(validateRanks(5, 7, "Ординатор", "Психиатр"),
-        [{ code: "rank-jump", from: 5, to: 7 }]);
-
-    const outOfRange = validateRanks(2, 3, "Стажёр", "Санитар");
-    assert.equal(outOfRange.length, 2);
-    assert.equal(outOfRange[0].code, "rank-out-of-table");
-});
-
 test("язык: auto следует за Discord, явный выбор перекрывает", () => {
     assert.equal(resolveLang("auto", "ru"), "ru");
     assert.equal(resolveLang("auto", "ru-RU"), "ru");
@@ -237,12 +211,11 @@ test("каждая проблема переводится на оба язык�
         { code: "missing-rank-field" },
         { code: "unparsable-ranks", value: "Ординатор [5]" },
         { code: "no-user-mention" },
-        { code: "rank-out-of-table", rank: 2, name: "Стажёр" },
-        { code: "rank-name-mismatch", rank: 6, name: "Терапевт", expected: "Старший ординатор" },
-        { code: "rank-jump", from: 5, to: 7 },
         // Дописывать новые коды только в конец: ниже к списку обращаются по индексу.
         { code: "promoter-not-configured" },
-        { code: "unknown-username" }
+        { code: "unknown-username" },
+        { code: "no-report-link" },
+        { code: "no-name-in-source" }
     ] as const;
 
     for (const issue of issues) {
@@ -254,8 +227,7 @@ test("каждая проблема переводится на оба язык�
 
     assert.match(formatIssue(issues[2], "ru"), /Илья Морозов/);
     assert.match(formatIssue(issues[2], "en"), /Илья Морозов/);
-    assert.equal(formatIssue(issues[8], "en"), "Promotion is not by a single rank: 5 → 7");
-    assert.equal(formatIssue(issues[8], "ru"), "Повышение не на один ранг: 5 → 7");
+    assert.equal(formatIssue(issues[5], "en"), "No user mention in the report — cannot tell who was promoted");
 });
 
 test("сообщение без отчёта отклоняется с понятной ошибкой", () => {

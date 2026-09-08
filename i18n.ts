@@ -20,10 +20,7 @@ export type AuditIssue =
     | { code: "promoter-not-configured"; }
     | { code: "unknown-username"; }
     | { code: "no-report-link"; }
-    | { code: "no-name-in-source"; }
-    | { code: "rank-out-of-table"; rank: number; name: string; }
-    | { code: "rank-name-mismatch"; rank: number; name: string; expected: string; }
-    | { code: "rank-jump"; from: number; to: number; };
+    | { code: "no-name-in-source"; };
 
 const UI = {
     en: {
@@ -111,14 +108,6 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "The request has no report link — «Причина повышения» would be empty";
             case "no-name-in-source":
                 return "This request has no name or Static ID: they only come from the bot's report embed";
-            case "rank-out-of-table":
-                return issue.name
-                    ? `Rank ${issue.rank} («${issue.name}») is outside the mid-level range (4–11)`
-                    : `Rank ${issue.rank} is outside the mid-level range (4–11)`;
-            case "rank-name-mismatch":
-                return `Rank ${issue.rank} is «${issue.name}» in the report, but «${issue.expected}» in the rank table`;
-            case "rank-jump":
-                return `Promotion is not by a single rank: ${issue.from} → ${issue.to}`;
         }
     },
     ru: issue => {
@@ -143,14 +132,6 @@ const ISSUES: Record<Lang, (issue: AuditIssue) => string> = {
                 return "В заявке нет ссылки на отчёт — «Причина повышения» осталась бы пустой";
             case "no-name-in-source":
                 return "В заявке нет имени и статика: они берутся только из embed'а отчёта";
-            case "rank-out-of-table":
-                return issue.name
-                    ? `Ранг ${issue.rank} («${issue.name}») вне диапазона среднего состава (4–11)`
-                    : `Ранг ${issue.rank} вне диапазона среднего состава (4–11)`;
-            case "rank-name-mismatch":
-                return `Ранг ${issue.rank} в отчёте назван «${issue.name}», в таблице рангов — «${issue.expected}»`;
-            case "rank-jump":
-                return `Повышение не на один ранг: ${issue.from} → ${issue.to}`;
         }
     }
 };
