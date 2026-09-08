@@ -10,13 +10,17 @@ import { test } from "node:test";
 // Сам факт успешного импорта «../settings» — половина проверки: сломанная версия
 // падала именно здесь, на этапе загрузки модуля, и уносила с собой весь Vencord.
 import { parseChannelList } from "../channels";
-import { DEFAULT_CHANNEL_IDS, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
+import { DEFAULT_AUDIT_CHANNEL_ID, DEFAULT_CHANNEL_IDS, DEFAULT_DEPARTMENT, DEFAULT_REACTION_EMOJI, DEFAULT_REPORT_CHANNEL_ID, DEFAULT_REQUEST_CHANNEL_ID } from "../constants";
+import { DEFAULT_ROLE_THRESHOLD } from "../plan";
 import { currentLang, settings } from "../settings";
 import { DEFAULT_COMMAND_TEMPLATE } from "../template";
 import { setLocale } from "./stubs/vencord.mjs";
 
 const KEYS = ["language", "promoterName", "promoterStatic", "promoterId", "channelIds", "action",
-    "showAuditItem", "showCommandItem", "template", "commandTemplate"] as const;
+    "showAuditItem", "showCommandItem", "template", "commandTemplate",
+    "showPromoteItem", "stepRoles", "stepNickname", "stepAudit", "stepReaction",
+    "roleThreshold", "rolesToAdd", "rolesToRemove", "department", "auditChannelId", "reactionEmoji",
+    "stepCopyCommand"] as const;
 
 test("модуль настроек грузится и отдаёт store с умолчаниями", () => {
     assert.equal(settings.store.language, "auto");
@@ -33,6 +37,30 @@ test("модуль настроек грузится и отдаёт store с у
     assert.equal(settings.store.showAuditItem, true);
     assert.equal(settings.store.showCommandItem, true);
     assert.equal(settings.store.commandTemplate, DEFAULT_COMMAND_TEMPLATE);
+});
+
+test("повышение выключено по умолчанию, а его шаги — нет", () => {
+    // Пункт меняет роли, ник и пишет в канал, поэтому включается вручную.
+    assert.equal(settings.store.showPromoteItem, false);
+
+    // Шаги, которые делает сам плагин, включены: когда пункт включат, он должен
+    // работать, а не молчать
+    assert.equal(settings.store.stepRoles, true);
+    assert.equal(settings.store.stepNickname, true);
+    assert.equal(settings.store.stepReaction, true);
+    assert.equal(settings.store.stepCopyCommand, true);
+
+    // Кроме текстового аудита: его теперь пишет бот по /повышение, а команду
+    // плагин отправить не может — она ушла бы обычным сообщением
+    assert.equal(settings.store.stepAudit, false);
+
+    assert.equal(settings.store.roleThreshold, DEFAULT_ROLE_THRESHOLD);
+    assert.equal(settings.store.department, DEFAULT_DEPARTMENT);
+    assert.equal(settings.store.reactionEmoji, DEFAULT_REACTION_EMOJI);
+
+    // Канал аудита один на фракцию, как и каналы отчётов
+    assert.equal(settings.store.auditChannelId, DEFAULT_AUDIT_CHANNEL_ID);
+    assert.deepEqual(parseChannelList(DEFAULT_AUDIT_CHANNEL_ID), [DEFAULT_AUDIT_CHANNEL_ID]);
 });
 
 test("описания читаются лениво и не пустые", () => {

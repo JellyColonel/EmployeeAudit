@@ -21,3 +21,16 @@ export const FIELD_NAME_STATIC = /имя\s+фамилия/;
 
 /** Поле «С какого на какой ранг повышаетесь?». */
 export const FIELD_RANKS = /с\s+какого\s+на\s+какой\s+ранг/;
+
+/** Канал, куда публикуется кадровый аудит. */
+export const DEFAULT_AUDIT_CHANNEL_ID = "1538690944336142497";
+
+/** Роли, которые меняются на входе в средний состав (3 → 4): «Интерн» → «Отдел СМП». */
+export const DEFAULT_ROLES_TO_ADD = "1538690943107072086";
+export const DEFAULT_ROLES_TO_REMOVE = "1538690943107072085";
+
+/** Отдел в никнейме: `Отдел | Имя Фамилия | Static ID`. */
+export const DEFAULT_DEPARTMENT = "СМП";
+
+/** Отметка обработанного сообщения. */
+export const DEFAULT_REACTION_EMOJI = "✅";

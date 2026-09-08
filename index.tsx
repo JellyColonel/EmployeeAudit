@@ -5,7 +5,7 @@
  */
 
 import { findGroupChildrenByChildId, NavContextMenuPatchCallback } from "@api/ContextMenu";
-import { CopyIcon, NotesIcon } from "@components/Icons";
+import { CopyIcon, NotesIcon, TopRightArrow } from "@components/Icons";
 import { copyWithToast, insertTextIntoChatInputBox } from "@utils/discord";
 import definePlugin from "@utils/types";
 import { Message } from "@vencord/discord-types";
@@ -13,8 +13,9 @@ import { ChannelStore, Menu, showToast, Toasts, UserStore } from "@webpack/commo
 import type { ReactElement } from "react";
 
 import { isChannelAllowed } from "./channels";
-import { type AuditIssue, formatIssue, t, type UiKey } from "./i18n";
-import { isPromotionReport, isShortPromotion, MessageLike, parseReport } from "./parser";
+import { type AuditIssue, formatIssue, type Lang, t, type UiKey } from "./i18n";
+import { isPromotionReport, isShortPromotion, MessageLike, type ParsedReport, parseReport } from "./parser";
+import { runPromotion } from "./promote";
 import { currentLang, settings } from "./settings";
 import { AuditData, messageLink, renderAudit, usesPlaceholder } from "./template";
 
@@ -27,11 +28,7 @@ type BuildResult =
  * командному не нужны имя и статик повышающего, текстовому — Discord-хендл,
  * и ругаться на незаполненное там, где оно не понадобится, незачем.
  */
-function buildAudit(message: Message, template: string): BuildResult {
-    const result = parseReport(message as unknown as MessageLike);
-    if (!result.ok) return result;
-
-    const { report } = result;
+function buildAudit(message: Message, report: ParsedReport, template: string): BuildResult {
     if (!report.targetUserId) {
         return { ok: false, issue: { code: "no-user-mention" } };
     }
@@ -72,9 +69,21 @@ function buildAudit(message: Message, template: string): BuildResult {
     return { ok: true, text: renderAudit(template, data) };
 }
 
-async function handleClick(message: Message, template: string, toasts: { copied: UiKey; inserted: UiKey; }) {
-    const built = buildAudit(message, template);
+/** Разбор с показом проблемы: одно место, где ошибка превращается в тост. */
+function parseOrToast(message: Message, lang: Lang): ParsedReport | null {
+    const result = parseReport(message as unknown as MessageLike);
+    if (result.ok) return result.report;
+
+    showToast(formatIssue(result.issue, lang), Toasts.Type.FAILURE);
+    return null;
+}
+
+async function handleCopy(message: Message, template: string, toasts: { copied: UiKey; inserted: UiKey; }) {
     const lang = currentLang();
+    const report = parseOrToast(message, lang);
+    if (!report) return;
+
+    const built = buildAudit(message, report, template);
     if (!built.ok) {
         showToast(formatIssue(built.issue, lang), Toasts.Type.FAILURE);
         return;
@@ -90,6 +99,37 @@ async function handleClick(message: Message, template: string, toasts: { copied:
     else if (shouldInsert) showToast(t(toasts.inserted, lang), Toasts.Type.SUCCESS);
 }
 
+/**
+ * Повышение целиком: роли, ник, аудит, галочка и команда в буфере. Тексты
+ * собираются здесь и только для включённых шагов — иначе незаполненные данные
+ * о самом повышающем блокировали бы смену ролей, к которой они отношения не
+ * имеют.
+ */
+async function handlePromote(message: Message) {
+    const lang = currentLang();
+    const report = parseOrToast(message, lang);
+    if (!report) return;
+
+    const texts = { auditText: "", commandText: "" };
+    const steps = [
+        { enabled: settings.store.stepAudit, template: settings.store.template, key: "auditText" },
+        { enabled: settings.store.stepCopyCommand, template: settings.store.commandTemplate, key: "commandText" }
+    ] as const;
+
+    for (const { enabled, template, key } of steps) {
+        if (!enabled) continue;
+
+        const built = buildAudit(message, report, template);
+        if (!built.ok) {
+            showToast(formatIssue(built.issue, lang), Toasts.Type.FAILURE);
+            return;
+        }
+        texts[key] = built.text;
+    }
+
+    await runPromotion({ message, report, ...texts, lang });
+}
+
 const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { message }: { message: Message; }) => {
     if (!message) return;
     if (!isChannelAllowed(message.channel_id, settings.store.channelIds)) return;
@@ -97,7 +137,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
     const isReport = isPromotionReport(source);
     if (!isReport && !isShortPromotion(source)) return;
 
-    const { showAuditItem, showCommandItem, template, commandTemplate } = settings.store;
+    const { showAuditItem, showCommandItem, showPromoteItem, template, commandTemplate } = settings.store;
     const lang = currentLang();
     const items: ReactElement<any>[] = [];
 
@@ -112,7 +152,7 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
                 label={t("menuLabel", lang)}
                 icon={NotesIcon}
                 leadingAccessory={{ type: "icon", icon: NotesIcon }}
-                action={() => handleClick(message, template, { copied: "copied", inserted: "inserted" })}
+                action={() => handleCopy(message, template, { copied: "copied", inserted: "inserted" })}
             />
         );
     }
@@ -124,7 +164,23 @@ const messageContextMenuPatch: NavContextMenuPatchCallback = (children, { messag
                 label={t("menuLabelCommand", lang)}
                 icon={CopyIcon}
                 leadingAccessory={{ type: "icon", icon: CopyIcon }}
-                action={() => handleClick(message, commandTemplate, { copied: "copiedCommand", inserted: "insertedCommand" })}
+                action={() => handleCopy(message, commandTemplate, { copied: "copiedCommand", inserted: "insertedCommand" })}
+            />
+        );
+    }
+
+    // Пункт остаётся видимым, даже если аудит из этого сообщения не собрать:
+    // роли, ник и галочка от имени и статика не зависят, а публикацию аудита
+    // можно выключить отдельным шагом.
+    if (showPromoteItem) {
+        items.push(
+            <Menu.MenuItem
+                id="vc-employee-audit-promote"
+                label={t("menuLabelPromote", lang)}
+                color="danger"
+                icon={TopRightArrow}
+                leadingAccessory={{ type: "icon", icon: TopRightArrow }}
+                action={() => handlePromote(message)}
             />
         );
     }
